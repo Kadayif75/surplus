@@ -4,7 +4,17 @@
 
 ## Laatste complete run
 
-**126/126 geslaagd**, zeven testbestanden, inclusief de optionele echte afbeelding. Zonder die lokale bijlage: **125 geslaagd, één overgeslagen**. Build en typecheck zijn succesvol. npm-audit meldt nul bekende kwetsbaarheden na het bijwerken van source-map-js naar 1.2.2. De build heeft een bestaande niet-blokkerende waarschuwing over de omvang van de hoofdbundel.
+**138 geslaagd, één overgeslagen**, acht testbestanden, inclusief 13 nieuwe PDF-tests. De optionele test met de lokale echte foto is in deze run overgeslagen; die was vóór de PDF-uitbreiding geslaagd. Build en typecheck zijn succesvol. npm-audit meldt nul bekende kwetsbaarheden. De build heeft een bestaande niet-blokkerende waarschuwing over de omvang van de hoofdbundel.
+
+## PDF-uitbreiding
+
+PDF.js 6.4.299 rendert echte, in de tests opgebouwde fictieve PDF’s op een Node-canvas; dezelfde productie-renderfunctie en Tesseract-pipeline lezen daarna de pixels uit. Een tekst-PDF van twee pagina’s levert beide juiste artikelcodes en aantallen met hun paginanummers op. Een PDF met uitsluitend een ingesloten scan levert de drie verwachte artikelcodes en aantallen op. Dit zijn geen nagebootste herkenningsresultaten.
+
+Aanvullende tests controleren: formaat en 20 MB-grens; maximaal 10 pagina’s; behoud van herhaalde artikelregels; een herhaald COL-totaal niet automatisch optellen; lege pagina’s melden; geheugen vrijgeven; annuleren; geen deelresultaat na een latere paginafout; verschillende pakbonnummers weigeren; en beschadigde PDF’s afwijzen.
+
+Vier React-componenttests met nagebootste PDF-invoer controleren paginabladers, het uitlezen van alle pagina’s, verplichte medewerkercontrole, één daadwerkelijke lokale voorraadtransactie, paginanummers in de ontvangst, geen afbeeldingsdata in opslag, fout op pagina twee, annuleren en de melding bij een wachtwoordbeveiligde PDF. De bestaande voorraadtransactie is hierbij echt uitgevoerd met fake-indexeddb.
+
+De productiebuild bevat de PDF-worker en de lokale fonts, CMaps en beelddecoders. Vite maakt deze resources vanuit de vastgelegde npm-versie aan. PDF-rendering en prestaties in Safari op een fysieke iPad zijn nog niet getest.
 
 | Controle | Uitvoering en resultaat |
 |---|---|
@@ -51,7 +61,7 @@ Vijf eerste UI-testasserties liepen vóór het einde van de asynchrone opslag. D
 - Fysieke iPad/Safari, iPadOS-versies, portret/landschap, camerafoto en mobiele HTTPS-prestaties.
 - Publicatie van deze versie op GitHub en uitvoering van de GitHub Actions-workflow.
 - Meerdere echte pakbonformaten, fysieke laaglicht-/onscherpteproeven en praktijkproeven met medewerkers.
-- PDF-invoer, gedeelde voorraad, back-up/herstel, offline-herladen en productierijpheid.
+- PDF-invoer op een fysieke iPad/Safari, gedeelde voorraad, back-up/herstel, offline-herladen en productierijpheid.
 
 ## Tests opnieuw uitvoeren
 

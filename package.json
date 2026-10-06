@@ -18,11 +18,13 @@
     "@zxing/library": "0.23.0",
     "dexie": "4.4.6",
     "jsbarcode": "3.12.3",
+    "pdfjs-dist": "6.4.299",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "tesseract.js": "7.0.0"
   },
   "devDependencies": {
+    "@napi-rs/canvas": "1.0.10",
     "@types/jsbarcode": "3.11.4",
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.18",

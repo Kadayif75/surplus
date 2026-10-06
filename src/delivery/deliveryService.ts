@@ -90,12 +90,12 @@ export async function confirmDelivery(db: InventoryDatabase, draft: DeliveryDraf
       await db.movements.add(movement); movementIds.push(movement.id);
       lines.push({ id: line.id, articleNumber: line.articleNumber, productId: product.id, productName: product.name,
         quantityPacks, locationId: line.destinationLocationId, confidence: validation.confidence,
-        manuallyReviewed: line.manuallyReviewed, checks: validation.checks, rawText: line.rawText });
+        manuallyReviewed: line.manuallyReviewed, checks: validation.checks, rawText: line.rawText, sourcePage: line.sourcePage });
     }
     const note: DeliveryNote = { id: draft.id, operationId: draft.operationId, identityKey, fingerprint,
       imageHash: draft.imageHash || undefined, deliveryNumber: draft.deliveryNumber.trim(), supplier: draft.supplier.trim(),
       deliveryDate: draft.deliveryDate, createdAt: draft.createdAt, processedAt, actor: 'Demogebruiker', status: 'Verwerkt',
-      lines, excludedLines: draft.lines.filter(l => l.excluded).map(l => ({ rawText: l.rawText, reason: l.exclusionReason })),
+      lines, excludedLines: draft.lines.filter(l => l.excluded).map(l => ({ rawText: l.rawText, reason: l.exclusionReason, sourcePage: l.sourcePage })),
       movementIds, commandSignature: signature };
     await db.deliveries.add(note);
     return note;

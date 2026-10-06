@@ -3,7 +3,7 @@ import type { Product } from '../domain/types';
 export interface ParsedDeliveryLine {
   articleNumber: string; detectedProductName: string; quantityText: string;
   unit: 'COL' | 'verpakking' | 'onbekend'; packsPerBoxText: string; piecesPerPackText: string;
-  rawText: string; gtin?: string;
+  rawText: string; gtin?: string; sourcePage?: number;
 }
 export interface DeliveryLine extends ParsedDeliveryLine {
   id: string; secondReading?: ParsedDeliveryLine; productId: string;
@@ -25,12 +25,12 @@ export interface DeliveryValidation {
 export interface ProcessedLine {
   id: string; articleNumber: string; productId: string; productName: string;
   quantityPacks: number; locationId: string; confidence: DeliveryValidation['confidence'];
-  manuallyReviewed: boolean; checks: Record<string, boolean>; rawText: string;
+  manuallyReviewed: boolean; checks: Record<string, boolean>; rawText: string; sourcePage?: number;
 }
 export interface DeliveryNote {
   id: string; operationId: string; identityKey: string; fingerprint: string; imageHash?: string;
   deliveryNumber: string; supplier: string; deliveryDate: string; createdAt: string; processedAt: string;
   status: 'Verwerkt'; actor: 'Demogebruiker'; lines: ProcessedLine[];
-  excludedLines: { rawText: string; reason: string }[];
+  excludedLines: { rawText: string; reason: string; sourcePage?: number }[];
   movementIds: string[]; commandSignature: string;
 }

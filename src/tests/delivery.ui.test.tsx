@@ -9,6 +9,9 @@ import { inventory } from '../data/inventoryRepository';
 import type { InventorySnapshot } from '../domain/types';
 
 const service = vi.hoisted(()=>({confirm:vi.fn()}));
+const pdfService = vi.hoisted(()=>({open:vi.fn(),analyze:vi.fn(),destroy:vi.fn(),render:vi.fn()}));
+vi.mock('../delivery/deliveryPdf', async original => ({ ...await original<typeof import('../delivery/deliveryPdf')>(), openDeliveryPdf: pdfService.open }));
+vi.mock('../delivery/deliveryOcr', async original => ({ ...await original<typeof import('../delivery/deliveryOcr')>(), analyzeDeliveryImage: pdfService.analyze }));
 vi.mock('../delivery/deliveryService',async original=>{
   const real=await original<typeof import('../delivery/deliveryService')>();
   return {...real,confirmDelivery:service.confirm};
@@ -83,5 +86,59 @@ describe('Pakboncamera met nagebootste camera',()=>{
   it('geweigerde camera geeft Nederlandse uitwijkroute',async()=>{
     Object.defineProperty(window,'isSecureContext',{value:true,configurable:true});Object.defineProperty(navigator,'mediaDevices',{value:{getUserMedia:vi.fn().mockRejectedValue(new DOMException('Test','NotAllowedError'))},configurable:true});
     await act(async()=>root.render(<DeliveryScanner captured={vi.fn()} close={vi.fn()}/>));await click('Camera starten');expect(container.textContent).toContain('geweigerd');expect(container.textContent).toContain('upload een foto');
+  });
+});
+
+describe('PDF-invoer in React met echte voorraadtransactie', () => {
+  async function upload() {
+    const file = new File(['%PDF-test'], 'test.pdf', { type: 'application/pdf' });
+    Object.defineProperty(file, 'arrayBuffer', { value: async () => new TextEncoder().encode('%PDF-test').buffer });
+    const input = container.querySelector('input[aria-label="Pakbonfoto of PDF kiezen"]') as HTMLInputElement;
+    expect(input.accept).toContain('application/pdf');
+    Object.defineProperty(input, 'files', { value: [file] });
+    await act(async () => { input.dispatchEvent(new Event('change', { bubbles: true })); });
+    await vi.waitFor(async () => { await act(async () => {}); expect(container.textContent).not.toContain('Document wordt geopend'); });
+  }
+  beforeEach(() => {
+    vi.spyOn(HTMLCanvasElement.prototype, 'toDataURL').mockReturnValue('data:image/jpeg;base64,TEST');
+    pdfService.open.mockReset(); pdfService.analyze.mockReset(); pdfService.destroy.mockReset().mockResolvedValue(undefined);
+    pdfService.render.mockReset().mockImplementation(async () => { const canvas = document.createElement('canvas'); canvas.width = 1800; canvas.height = 2400; return canvas; });
+    pdfService.open.mockResolvedValue({ pageCount: 2, renderPage: pdfService.render, destroy: pdfService.destroy });
+    pdfService.analyze.mockImplementation(async () => {
+      const { parseDeliveryRows, parseMetadata } = await import('../delivery/deliveryParser');
+      return { lines: parseDeliveryRows(['2 COL 760364 TENA Discreet Mini 6x30p']).map(line => ({ ...line, secondReading: line })), metadata: parseMetadata(['Pakbon: UI-PDF-01', 'Leverancier: Fictieve leverancier']) };
+    });
+  });
+  it('bladert door PDF-pagina’s, leest alle pagina’s, en bewaart alleen gecontroleerde gegevens na bevestiging', async () => {
+    await mount(); await upload(); expect(container.textContent).toContain('PDF-pagina 1 van 2');
+    await click('Volgende pagina'); expect(container.textContent).toContain('PDF-pagina 2 van 2');
+    await click('Pakbon uitlezen'); await vi.waitFor(async () => { await act(async () => {}); expect(container.textContent).toContain('Levering controleren'); });
+    expect(pdfService.analyze).toHaveBeenCalledTimes(2); expect(container.textContent).toContain('PDF-pagina 1 ·'); expect(container.textContent).toContain('PDF-pagina 2 ·');
+    expect(textButton('Ontvangst bevestigen').disabled).toBe(true); expect(await inventory.snapshot()).toEqual(snapshot);
+    const destinations = [...container.querySelectorAll('label')].filter(label => label.textContent?.startsWith('Bestemming')).map(label => label.querySelector('select')!);
+    for (const destination of destinations) await act(async () => { Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value')!.set!.call(destination, 'H1'); destination.dispatchEvent(new Event('change', { bubbles: true })); });
+    const checks = [...container.querySelectorAll('label')].filter(label => label.textContent?.startsWith('Ik heb artikel, product')).map(label => label.querySelector('input')!);
+    for (const checkbox of checks) await act(async () => checkbox.click());
+    await check('Ik heb de volledige pakbon'); await click('Ontvangst bevestigen');
+    expect(container.textContent).toContain('Ontvangst bevestigd'); expect(pdfService.destroy).toHaveBeenCalledOnce();
+    expect((await inventory.db.stocks.get(['tena-760364', 'H1']))?.quantityPacks).toBe(34);
+    const note = await inventory.db.deliveries.toArray(); expect(note).toHaveLength(1); expect(JSON.stringify(note)).not.toContain('data:image');
+    expect(note[0].imageHash).toHaveLength(64);
+    expect(note[0].lines.map(line => line.sourcePage)).toEqual([1, 2]);
+  });
+  it('een fout op pagina twee geeft geen gedeeltelijke controle of voorraadmutatie', async () => {
+    const first = pdfService.analyze.getMockImplementation()!; pdfService.analyze.mockImplementationOnce(first).mockRejectedValueOnce(new Error('Pagina onleesbaar'));
+    await mount(); await upload(); await click('Pakbon uitlezen');
+    await vi.waitFor(async () => { await act(async () => {}); expect(container.textContent).toContain('geen gedeeltelijke resultaten'); });
+    expect(container.textContent).not.toContain('Levering controleren'); expect(service.confirm).not.toHaveBeenCalled(); expect(await inventory.snapshot()).toEqual(snapshot);
+  });
+  it('annuleren sluit de PDF en bewaart geen ontvangst', async () => {
+    await mount(); await upload(); await click('Annuleren / nieuwe pakbon');
+    expect(pdfService.destroy).toHaveBeenCalledOnce(); expect(container.textContent).not.toContain('PDF-pagina 1 van'); expect(await inventory.snapshot()).toEqual(snapshot);
+  });
+  it('toont een duidelijke fout bij een beveiligde PDF', async () => {
+    const { InventoryError } = await import('../domain/stockService');
+    pdfService.open.mockRejectedValue(new InventoryError('Deze PDF is beveiligd met een wachtwoord. Upload een onbeveiligde kopie.'));
+    await mount(); await upload(); expect(container.textContent).toContain('beveiligd met een wachtwoord'); expect(await inventory.snapshot()).toEqual(snapshot);
   });
 });

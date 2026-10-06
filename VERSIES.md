@@ -20,3 +20,5 @@
 Alle transitieve afhankelijkheden staan in package-lock.json. Gebruik npm ci.
 
 Uitbreiding 6 oktober 2026: tesseract.js 7.0.0; tesseract.js-core 7.0.0; source-map-js 1.2.2. Exacte versies en afhankelijkheden staan in het bijgewerkte lockbestand.
+
+PDF-uitbreiding 6 oktober 2026: pdfjs-dist 6.4.299; @napi-rs/canvas 1.0.10 (alleen voor de Node-testomgeving, niet voor de webapp).

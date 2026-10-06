@@ -32,7 +32,7 @@ export function DeliveryReview({ draft, data, aliases, change, disabled }: { dra
       const suggestions = !product ? data.products.filter(p => nameConsistent(line.detectedProductName, p)) : [];
       return <section className={`card delivery-line ${line.excluded ? 'excluded' : ''}`} key={line.id}>
         <div className="line-title"><h2>Regel {index + 1}: {product?.name ?? 'Product nog niet gekoppeld'}</h2><span className={`confidence ${validation.confidence === 'Hoge zekerheid' ? 'high' : ''}`}>{line.excluded ? 'Overgeslagen' : validation.confidence}</span></div>
-        <p className="delivery-original"><strong>Gelezen:</strong> {line.rawText || 'Niet met voldoende zekerheid herkend'}</p>
+        <p className="delivery-original">{line.sourcePage && <strong>PDF-pagina {line.sourcePage} · </strong>}<strong>Gelezen:</strong> {line.rawText || 'Niet met voldoende zekerheid herkend'}</p>
         {!line.excluded && <>
           {suggestions.length > 0 && <p className="notice">Mogelijk: {suggestions.map(p => `${p.name} (${p.tenaArticleNumber})`).join(', ')}. Kies en bevestig zelf de koppeling.</p>}
           <div className="form-grid delivery-fields">
