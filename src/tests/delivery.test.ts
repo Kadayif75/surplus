@@ -37,6 +37,23 @@ describe('Pakbon uitlezen en betrouwbaarheid', () => {
     expect(validateDeliveryLine(line(), seedProducts, seedLocations, []).confidence).toBe('Controle nodig');
   });
   it('bekend artikel met verkeerd gekozen product kan niet worden geboekt', () => { expect(validateDeliveryLine(line({ productId: 'tena-750651', aliasConfirmed: true, packsPerBoxText: '6', piecesPerPackText: '24' }), products, seedLocations, []).canBook).toBe(false); });
+  it('handmatig gecontroleerde alias is boekbaar terwijl automatische zekerheid beperkt blijft', () => {
+    const validation = validateDeliveryLine(line({ articleNumber: '76036499', aliasConfirmed: true, secondReading: undefined }), seedProducts, seedLocations, []);
+    expect(validation.confidence).toBe('Controle nodig'); expect(validation.canBook).toBe(true); expect(validation.blockingReasons).toEqual([]);
+  });
+  it('vinkjes kunnen verkeerde doosinhoud en ontbrekende bestemming niet oplossen', () => {
+    const parsed = parseDeliveryLine('1 COL 79167102 TENA Pants Normal L 4x18p')!;
+    const validation = validateDeliveryLine(line({ ...parsed, productId: 'tena-750776', aliasConfirmed: true, manuallyReviewed: true, destinationLocationId: '' }), seedProducts, seedLocations, []);
+    expect(validation.canBook).toBe(false);
+    expect(validation.blockingReasons.join(' ')).toContain('TENA Men Level 2 (6 × 20)');
+    expect(validation.blockingReasons.join(' ')).toContain('Kies bij Bestemming');
+    expect(validation.blockingReasons.join(' ')).not.toContain('Vink de regelcontrole');
+  });
+  it('toont een bestaand conflicterend artikel ook na handmatige bevestiging', () => {
+    const validation = validateDeliveryLine(line({ productId: 'tena-750651', aliasConfirmed: true, piecesPerPackText: '24' }), seedProducts, seedLocations, []);
+    expect(validation.blockingReasons.join(' ')).toContain('al gekoppeld aan TENA Discreet Mini');
+    expect(validation.canBook).toBe(false);
+  });
   it('bekende barcode van ander product blokkeert', () => { expect(validateDeliveryLine(line({ gtin: 'known' }), products, seedLocations, [], false, [{ id: 'test', rawValue: 'known', productId: 'tena-750651', verified: true, isDemo: false, symbology: 'CODE_128', packagingLevel: 'verpakking', quantityInStockUnits: 1 }]).canBook).toBe(false); });
   it('beide sets regels worden behouden bij conflict en ontbrekende regels', () => { const merged = reconcileReadings([parsed], [{ ...parsed, articleNumber: '999999' }]); expect(merged).toHaveLength(2); expect(merged.every(l => !l.secondReading)).toBe(true); });
   it('herhaalde artikelregels blijven zichtbaar en vragen controle', () => { expect(reconcileReadings([parsed,parsed],[parsed,parsed])).toHaveLength(2); expect(validateDeliveryLine(line(), products, seedLocations, [], true).confidence).toBe('Controle nodig'); });

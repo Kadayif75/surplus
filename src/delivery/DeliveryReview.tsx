@@ -31,10 +31,11 @@ export function DeliveryReview({ draft, data, aliases, change, disabled }: { dra
       const needsAlias = !!product && product.tenaArticleNumber !== line.articleNumber && resolved?.id !== product.id;
       const suggestions = !product ? data.products.filter(p => nameConsistent(line.detectedProductName, p)) : [];
       return <section className={`card delivery-line ${line.excluded ? 'excluded' : ''}`} key={line.id}>
-        <div className="line-title"><h2>Regel {index + 1}: {product?.name ?? 'Product nog niet gekoppeld'}</h2><span className={`confidence ${validation.confidence === 'Hoge zekerheid' ? 'high' : ''}`}>{line.excluded ? 'Overgeslagen' : validation.confidence}</span></div>
+        <div className="line-title"><h2>Regel {index + 1}: {product?.name ?? 'Product nog niet gekoppeld'}</h2><span className={`confidence ${!line.excluded && validation.canBook ? 'high' : ''}`}>{line.excluded ? 'Overgeslagen' : validation.canBook ? 'Gecontroleerd' : product ? 'Controle nodig' : 'Product kiezen'}</span></div>
         <p className="delivery-original">{line.sourcePage && <strong>PDF-pagina {line.sourcePage} · </strong>}<strong>Gelezen:</strong> {line.rawText || 'Niet met voldoende zekerheid herkend'}</p>
         {!line.excluded && <>
           {suggestions.length > 0 && <p className="notice">Mogelijk: {suggestions.map(p => `${p.name} (${p.tenaArticleNumber})`).join(', ')}. Kies en bevestig zelf de koppeling.</p>}
+          {product && !validation.checks['Productnaam komt overeen'] && <p className="notice">De gelezen naam “{line.detectedProductName || '(ontbreekt)'}” komt niet overeen met het gekozen product “{product.name}”. Controleer de productkeuze op de bon of verpakking. Corrigeer de gelezen naam alleen als de tekstherkenning fout is.</p>}
           <div className="form-grid delivery-fields">
             <label>Artikelnummer op pakbon<input value={line.articleNumber} inputMode="numeric" onChange={e => {
               const articleNumber = e.target.value; const found = resolveProduct(articleNumber, data.products, aliases);
@@ -58,8 +59,9 @@ export function DeliveryReview({ draft, data, aliases, change, disabled }: { dra
             update(index, { productId: newProduct.id, newProduct, aliasConfirmed: true });
           }} disabled={!/^\d{5,10}$/.test(line.articleNumber) || !line.detectedProductName.trim() || !positiveInteger(line.packsPerBoxText) || !positiveInteger(line.piecesPerPackText)}>Nieuw product voorbereiden</button></div>}
           {line.newProduct && <p className="notice">Nieuw product wordt bij ontvangstbevestiging toegevoegd. Controleer naam, artikelnummer en verpakking op de bon en op het product.</p>}
-          <details className="validation-details"><summary>Waarom deze zekerheid?</summary><ul>{Object.entries(validation.checks).map(([label,ok]) => <li key={label}>{ok ? 'Ja' : 'Controle nodig'}: {label}</li>)}</ul>{line.secondReading && <p>Tweede uitlezing: {line.secondReading.rawText}</p>}</details>
+          <details className="validation-details"><summary>Details automatische herkenning</summary><p>Automatische herkenning: <strong>{validation.confidence}</strong>. Deze zekerheid gaat over de automatische uitlezing. Je handmatige controle staat apart; een gecontroleerde regel kan klaar zijn voor ontvangst terwijl de automatische herkenning onzeker blijft.</p><ul>{Object.entries(validation.checks).map(([label,ok]) => <li key={label}>{ok ? 'Automatisch bevestigd' : 'Niet automatisch bevestigd'}: {label}</li>)}</ul>{line.secondReading && <p>Tweede uitlezing: {line.secondReading.rawText}</p>}</details>
           <label className="checkbox delivery-check"><input type="checkbox" checked={line.manuallyReviewed} onChange={e => update(index, { manuallyReviewed: e.target.checked }, true)} />Ik heb artikel, product, aantal, verpakking en bestemming van deze regel gecontroleerd.</label>
+          {validation.canBook ? <p className="success" role="status">Deze regel is gecontroleerd en klaar voor ontvangstbevestiging. Controleer ook de andere regels en bevestig onderaan dat de pakbon volledig is.</p> : <div className="notice"><strong>Nog te doen voor deze regel:</strong><ul>{validation.blockingReasons.map(reason => <li key={reason}>{reason}</li>)}</ul></div>}
         </>}
         <label className="checkbox delivery-check"><input type="checkbox" checked={line.excluded} onChange={e => update(index, { excluded: e.target.checked })} />Deze regel overslaan (bijvoorbeeld emballage)</label>
         {line.excluded && <label>Reden voor overslaan<input value={line.exclusionReason} onChange={e => update(index, { exclusionReason: e.target.value })} required /></label>}

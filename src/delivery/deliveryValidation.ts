@@ -53,6 +53,22 @@ export function validateDeliveryLine(line: DeliveryLine, products: Product[], lo
   const barcodeConflict = !!line.gtin && (!knownGtin || knownGtin.productId !== product?.id);
   const conflictingIdentity = recognized && recognized.id !== product?.id;
   const newProductValid = !line.newProduct || (!!line.newProduct.name.trim() && !!positiveInteger(String(line.newProduct.packsPerBox)) && !!positiveInteger(String(line.newProduct.piecesPerPack)));
+  const blockingReasons: string[] = [];
+  if (!product) blockingReasons.push('Kies het juiste product in voorraad of bereid een gecontroleerd nieuw product voor.');
+  if (!newProductValid) blockingReasons.push('Vul de naam en geldige verpakkingsgegevens van het nieuwe product in.');
+  if (!line.articleNumber.trim()) blockingReasons.push('Vul het artikelnummer van de pakbon in.');
+  if (product && !aliasAllowed) blockingReasons.push('Bevestig de koppeling tussen de afwijkende pakboncode en het gekozen product.');
+  if (conflictingIdentity) blockingReasons.push(`Deze artikelcode is al gekoppeld aan ${recognized.name}. Kies het bijbehorende product en controleer de pakbon.`);
+  if (barcodeConflict) blockingReasons.push('De gelezen barcode is onbekend of hoort bij een ander product. Controleer de barcode en productkoppeling.');
+  if (quantityPacks === undefined) {
+    if (quantity === undefined) blockingReasons.push('Vul bij Aantal op de bon een positief geheel getal in.');
+    else if (line.unit === 'onbekend') blockingReasons.push('Kies de eenheid: COL / doos of verpakking.');
+    else if (line.unit === 'COL' && packsPerBox === undefined) blockingReasons.push('Vul een positief geheel aantal verpakkingen per doos in.');
+    else blockingReasons.push('Het omgerekende aantal is te groot. Controleer aantal en verpakkingen per doos.');
+  }
+  if (product && !packagingMatches) blockingReasons.push(`De doosinhoud op de bon (${line.packsPerBoxText || '?'} verpakkingen × ${line.piecesPerPackText || '?'} stuks) wijkt af van ${product.name} (${product.packsPerBox} × ${product.piecesPerPack}). Controleer het gekozen product en de doosinhoud op de bon of verpakking.`);
+  if (!destination.verified) blockingReasons.push('Kies bij Bestemming een geldige voorraadruimte.');
+  if (!line.manuallyReviewed) blockingReasons.push('Vink de regelcontrole aan nadat je artikel, product, aantal, verpakking en bestemming hebt gecontroleerd.');
   return { confidence, quantityPacks, checks, reasons,
-    canBook: !!product && newProductValid && !!line.articleNumber.trim() && aliasAllowed && !conflictingIdentity && !barcodeConflict && quantityPacks !== undefined && packagingMatches && destination.verified && line.manuallyReviewed };
+    blockingReasons, canBook: blockingReasons.length === 0 };
 }

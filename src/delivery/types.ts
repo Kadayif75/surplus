@@ -19,7 +19,7 @@ export interface ArticleAlias { articleNumber: string; productId: string; verifi
 export interface ProductLocationRule { id: string; productId: string; locationId: string; verified: boolean; reason: string; priority?: number }
 export interface DeliveryValidation {
   confidence: 'Hoge zekerheid' | 'Controle nodig' | 'Niet herkend';
-  quantityPacks?: number; canBook: boolean; reasons: string[];
+  quantityPacks?: number; canBook: boolean; reasons: string[]; blockingReasons: string[];
   checks: Record<string, boolean>;
 }
 export interface ProcessedLine {

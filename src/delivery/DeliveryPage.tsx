@@ -110,6 +110,15 @@ export function DeliveryPage({ data }: { data: InventorySnapshot }) {
   const received = draft.lines.filter(l => !l.excluded);
   const validations = received.map(l => validateDeliveryLine(l, data.products, data.locations, aliases, received.filter(other => other.articleNumber === l.articleNumber).length > 1, data.mappings));
   const ready = !!draft.deliveryNumber.trim() && !!draft.supplier.trim() && draft.completenessConfirmed && received.length > 0 && validations.every(v => v.canBook) && draft.lines.every(l => !l.excluded || !!l.exclusionReason.trim());
+  const pendingActions = [
+    ...(!draft.deliveryNumber.trim() ? ['Vul het pakbon-/leveringsnummer in.'] : []),
+    ...(!draft.supplier.trim() ? ['Vul de leverancier in.'] : []),
+    ...(!received.length ? ['Neem minimaal één productregel op.'] : []),
+    ...draft.lines.flatMap((line, index) => line.excluded
+      ? (!line.exclusionReason.trim() ? [`Regel ${index + 1}: geef een reden voor overslaan.`] : [])
+      : validations[received.indexOf(line)].blockingReasons.map(reason => `Regel ${index + 1}: ${reason}`)),
+    ...(!draft.completenessConfirmed ? ['Vink onderaan aan dat je de volledige pakbon hebt vergeleken.'] : []),
+  ];
   async function confirm() {
     if (lock.current) return;
     lock.current = true; setBusy(true); setError('');
@@ -145,7 +154,7 @@ export function DeliveryPage({ data }: { data: InventorySnapshot }) {
             const before = ((busy || retryDraft.current) && receiptBefore.current ? receiptBefore.current : data.stocks).find(s => s.productId === line.productId && s.locationId === line.destinationLocationId)?.quantityPacks ?? (line.newProduct ? 0 : undefined);
             const earlier = received.slice(0,index).reduce((sum,other,i) => other.productId === line.productId && other.destinationLocationId === line.destinationLocationId ? sum + (validations[i].quantityPacks ?? 0) : sum, 0);
             return <tr key={line.id}><td>{product?.name ?? 'Nog niet gekoppeld'}<small>Pakboncode {line.articleNumber || 'ontbreekt'}</small></td><td>{data.locations.find(l => l.id === line.destinationLocationId)?.name ?? 'Nog niet vastgesteld'}</td><td>{quantity ?? 'Controle nodig'}</td><td>{before !== undefined && quantity !== undefined ? `${before + earlier} → ${before + earlier + quantity}` : 'Controle nodig'}</td></tr>;
-          })}</tbody></table></div><div className="actions"><button className="primary" disabled={busy || !!duplicate || (!retryDraft.current && !ready)} onClick={() => void confirm()}>{busy ? 'Ontvangst opslaan…' : retryDraft.current ? 'Dezelfde ontvangst opnieuw proberen' : 'Ontvangst bevestigen'}</button></div>{!ready && !retryDraft.current && <p className="small">Controleer alle regels, kies de bestemmingen en bevestig dat de pakbon volledig is.</p>}</section>
+          })}</tbody></table></div><div className="actions"><button className="primary" disabled={busy || !!duplicate || (!retryDraft.current && !ready)} onClick={() => void confirm()}>{busy ? 'Ontvangst opslaan…' : retryDraft.current ? 'Dezelfde ontvangst opnieuw proberen' : 'Ontvangst bevestigen'}</button></div>{!retryDraft.current && (ready ? <p className="success" role="status">Alle opgenomen regels zijn gecontroleerd en de pakbon is volledig. Je kunt de ontvangst bevestigen.</p> : <div className="notice"><strong>Nog te doen voor ontvangstbevestiging:</strong><ul>{pendingActions.map(action => <li key={action}>{action}</li>)}</ul></div>)}</section>
         </>}
       </div>
     </div>

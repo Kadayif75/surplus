@@ -57,6 +57,36 @@ describe('Pakbonroute in React-componenten met echte lokale opslag',()=>{
   });
   it('annuleren na controle boekt niets',async()=>{await prepare();await click('Annuleren / nieuwe pakbon');expect(service.confirm).not.toHaveBeenCalled();expect(await inventory.snapshot()).toEqual(snapshot);});
   it('wijziging na controle maakt bevestiging opnieuw verplicht',async()=>{await prepare();await enter('Aantal op de bon','3');expect(textButton('Ontvangst bevestigen').disabled).toBe(true);expect((labelInput('Ik heb artikel, product') as HTMLInputElement).checked).toBe(false);});
+  it('handmatig bevestigde afwijkende code toont Gecontroleerd en concrete laatste actie', async () => {
+    await prepare(); await enter('Artikelnummer op pakbon', '76036499'); await enter('Product in voorraad', 'tena-760364');
+    await check('Ik bevestig dat pakboncode'); await check('Ik heb artikel, product');
+    const card = container.querySelector('.delivery-line')!;
+    expect(card.querySelector('.confidence')?.textContent).toBe('Gecontroleerd');
+    expect(card.textContent).toContain('Automatische herkenning: Controle nodig');
+    expect(card.textContent).not.toContain('Nog te doen voor deze regel');
+    expect(textButton('Ontvangst bevestigen').disabled).toBe(true);
+    expect(container.querySelector('.delivery-final')?.textContent).toContain('volledige pakbon hebt vergeleken');
+    await check('Ik heb de volledige pakbon'); expect(textButton('Ontvangst bevestigen').disabled).toBe(false);
+    expect(container.textContent).toContain('Je kunt de ontvangst bevestigen');
+    await click('Ontvangst bevestigen'); expect(container.textContent).toContain('Ontvangst bevestigd');
+    expect((await inventory.db.articleAliases.get('76036499'))?.productId).toBe('tena-760364');
+  });
+  it('verkeerd gekozen Men Level 2 bij Pants Large vermeldt verschil en blijft geblokkeerd tot correctie', async () => {
+    await prepare(); await enter('Artikelnummer op pakbon', '79167102'); await enter('Gelezen productnaam', 'TENA Pants Normal L');
+    await enter('Product in voorraad', 'tena-750776'); await enter('Aantal op de bon', '1');
+    await enter('Verpakkingen per doos', '4'); await enter('Stuks per verpakking', '18');
+    await check('Ik bevestig dat pakboncode'); await check('Ik heb artikel, product'); await check('Ik heb de volledige pakbon');
+    const card = container.querySelector('.delivery-line')!;
+    expect(card.querySelector('.confidence')?.textContent).toBe('Controle nodig');
+    expect(card.textContent).toContain('De gelezen naam “TENA Pants Normal L” komt niet overeen');
+    expect(card.textContent).toContain('TENA Men Level 2 (6 × 20)');
+    expect(textButton('Ontvangst bevestigen').disabled).toBe(true); expect(await inventory.snapshot()).toEqual(snapshot);
+    await enter('Product in voorraad', 'tena-791628'); await check('Ik bevestig dat pakboncode'); await check('Ik heb artikel, product');
+    expect(card.querySelector('.confidence')?.textContent).toBe('Gecontroleerd');
+    expect(card.textContent).not.toContain('De gelezen naam');
+    expect(textButton('Ontvangst bevestigen').disabled).toBe(true);
+    await check('Ik heb de volledige pakbon'); expect(textButton('Ontvangst bevestigen').disabled).toBe(false);
+  });
   it('afwijkende verpakking en decimale hoeveelheid blokkeren',async()=>{await prepare();await enter('Stuks per verpakking','50');await check('Ik heb artikel, product');await check('Ik heb de volledige pakbon');expect(textButton('Ontvangst bevestigen').disabled).toBe(true);await enter('Aantal op de bon','1,5');expect(textButton('Ontvangst bevestigen').disabled).toBe(true);});
   it('onzekere uitkomst na commit bewaart dezelfde opdracht voor veilige retry',async()=>{
     const real=await vi.importActual<typeof import('../delivery/deliveryService')>('../delivery/deliveryService');

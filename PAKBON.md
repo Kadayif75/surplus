@@ -21,6 +21,10 @@ Controleer ook PDF-pagina’s zonder herkende productregels. De app meldt welke 
 
 ## Zekerheid
 
+De status boven iedere regel geeft de voortgang van de medewerkercontrole aan: **Product kiezen**, **Controle nodig**, **Gecontroleerd** of **Overgeslagen**. **Gecontroleerd** betekent dat de regel geldig is en klaar is voor ontvangstbevestiging. Als de regel nog blokkeert, staat er zichtbaar **Nog te doen voor deze regel**, met de concrete ontbrekende gegevens of afwijkingen. Onderaan de ontvangst staan ook het regelnummer, ontbrekende leveringsgegevens en de eventuele volledigheidscontrole. Pas als alles klaar is, wordt **Ontvangst bevestigen** beschikbaar.
+
+**Details automatische herkenning** toont afzonderlijk de zekerheid van de OCR en automatische productcontrole. Een handmatig gecontroleerde regel kan dus **Gecontroleerd** zijn terwijl de automatische herkenning **Controle nodig** blijft, bijvoorbeeld door onbevestigde demo-assortimentsgegevens, een nieuwe alias of twee verschillende OCR-uitkomsten. De vinkjes verhogen geen automatische zekerheid. Ze kunnen ook geen ongeldige aantallen, afwijkende doosinhoud of ontbrekende bestemming oplossen. Bij een afwijkende naam wordt zichtbaar gevraagd het gekozen product op de bon of verpakking te controleren; corrigeer de gelezen naam alleen bij een herkenningsfout.
+
 **Hoge zekerheid** vereist dat artikelnummer of eerder bevestigde alias overeenkomt, het bestaande assortiment bevestigd is, naam en variant passen, het aantal een positief geheel getal is, de doosinhoud klopt, beide OCR-uitkomsten identiek zijn, het artikel niet herhaald voorkomt, een eventuele GTIN niet conflicteert en de bestemming door de medewerker gekozen is.
 
 **Controle nodig** verschijnt zodra een controle ontbreekt of niet overeenkomt. **Niet herkend** betekent dat geen bestaand of expliciet voorbereid product gekoppeld is. De details **Waarom deze zekerheid?** tonen iedere controle afzonderlijk. Er worden geen procentuele kansen geclaimd. Ook regels met hoge zekerheid vereisen een bewuste regelcontrole en de uiteindelijke ontvangstbevestiging.

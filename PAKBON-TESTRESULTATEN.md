@@ -4,7 +4,13 @@
 
 ## Laatste complete run
 
-**138 geslaagd, één overgeslagen**, acht testbestanden, inclusief 13 nieuwe PDF-tests. De optionele test met de lokale echte foto is in deze run overgeslagen; die was vóór de PDF-uitbreiding geslaagd. Build en typecheck zijn succesvol. npm-audit meldt nul bekende kwetsbaarheden. De build heeft een bestaande niet-blokkerende waarschuwing over de omvang van de hoofdbundel.
+**143 geslaagd, één overgeslagen**, acht testbestanden, inclusief 13 PDF-tests en vijf regressietests voor de status van de medewerkercontrole. De optionele test met de lokale echte foto is in deze run overgeslagen; die was vóór de PDF-uitbreiding geslaagd. Build en typecheck zijn succesvol. De build heeft een bestaande niet-blokkerende waarschuwing over de omvang van de hoofdbundel.
+
+## Duidelijke medewerkercontrole
+
+De status van een regel staat apart van automatische herkenningszekerheid. Drie domeintests controleren dat een handmatig bevestigde alias met onbevestigd demo-assortiment boekbaar is zonder automatische hoge zekerheid; dat afwijkende doosinhoud en ontbrekende bestemming ondanks vinkjes concrete blokkeringen blijven; en dat een code van een ander bestaand product blijft blokkeren.
+
+Twee React-regressietests controleren de zichtbare status **Gecontroleerd**, de resterende volledigheidscontrole, ontvangst en aliasopslag. Het gemelde voorbeeld wordt nagebootst: **79167102 / TENA Pants Normal L / 4×18** gekoppeld aan **TENA Men Level 2 / 6×20** toont het naamverschil en de verpakkingsblokkering. Na keuze van Pants Normal Large en hernieuwde medewerkercontrole is de regel gereed, maar blijft ontvangst geblokkeerd totdat de hele pakbon is bevestigd. De automatische zekerheid blijft afzonderlijk zichtbaar en wordt niet door de vinkjes verhoogd.
 
 ## PDF-uitbreiding
 
