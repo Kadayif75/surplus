@@ -77,8 +77,8 @@ export class LocalInventoryRepository implements InventoryRepository {
     });
   }
   resetDemo() {
-    return this.db.transaction('rw', [this.db.products, this.db.locations, this.db.mappings, this.db.stocks, this.db.movements, this.db.meta], async () => {
-      for (const table of [this.db.products, this.db.locations, this.db.mappings, this.db.stocks, this.db.movements, this.db.meta]) await table.clear();
+    return this.db.transaction('rw', [this.db.products, this.db.locations, this.db.mappings, this.db.stocks, this.db.movements, this.db.meta, this.db.deliveries, this.db.articleAliases, this.db.productLocationRules], async () => {
+      for (const table of [this.db.products, this.db.locations, this.db.mappings, this.db.stocks, this.db.movements, this.db.meta, this.db.deliveries, this.db.articleAliases, this.db.productLocationRules]) await table.clear();
       await writeSeed(this.db);
     });
   }

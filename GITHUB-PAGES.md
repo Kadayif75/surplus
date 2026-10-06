@@ -20,7 +20,7 @@ Zet je Pages pas na de upload aan, of is een eerste publicatie mislukt? Zet Sour
 
 ## Belangrijk bij deze demo
 
-De repository en website zijn openbaar. Het pakket bevat uitsluitend de fictieve voorraaddemo; upload geen bewonerswerkmap of andere vertrouwelijke bijlagen. Hosting verandert de opslag niet: elke browser/apparaat heeft een eigen lokale voorraad. De website is geen gedeeld voorraadsysteem en bevat geen pakbon-OCR, accounts of Microsoft-koppeling.
+De repository en website zijn openbaar. Het pakket bevat uitsluitend de fictieve voorraaddemo; upload geen bewonerswerkmap of andere vertrouwelijke bijlagen. Hosting verandert de opslag niet: elke browser/apparaat heeft een eigen lokale voorraad. De website is geen gedeeld voorraadsysteem en bevat nu lokale pakbon-OCR, maar geen accounts of Microsoft-koppeling.
 
 De Vite-configuratie gebruikt `base: './'`. De gebouwde HTML verwijst relatief naar CSS, JavaScript en het favicon en kan daardoor ook onder de repository-map laden. Er is geen extra router of GitHub-redirect nodig voor de huidige schermen. Als later een router met echte URL-paden wordt toegevoegd, moet de publicatie opnieuw worden beoordeeld.
 

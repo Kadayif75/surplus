@@ -2,6 +2,8 @@
 
 **Publiceren op GitHub:** dit complete project bevat een GitHub Actions-workflow. Volg [GITHUB-PAGES.md](GITHUB-PAGES.md). Upload de uitgepakte projectinhoud één keer; een apart ZIP-bestand met de gebouwde website is niet nodig. GitHub bouwt, test en publiceert vanuit de broncode.
 
+**Uitbreiding 6 oktober 2026:** pakbonnen fotograferen/uploaden, tweemaal lokaal uitlezen, handmatig controleren, COL omrekenen naar verpakkingen, per regel een ruimte kiezen en pas na ontvangstbevestiging boeken. Afwijkende artikelcodes en nieuwe producten worden expliciet bevestigd. Foto's blijven tijdelijk in geheugen. Zie [PAKBON.md](PAKBON.md) en [PAKBON-TESTRESULTATEN.md](PAKBON-TESTRESULTATEN.md).
+
 Werkende Nederlandstalige webapp met de acht producten en fictieve beginstanden uit de masterprompt. H1, H2 en H3 houden onafhankelijk voorraad bij. Eén eenheid is één ongeopende **verpakking**. Er is geen gedeelde voorraad, backend, account, bestelling, minimumvoorraad, Excel-koppeling of live Microsoft-verbinding.
 
 ## Starten en controleren
@@ -87,7 +89,7 @@ Geseede synthetische codes zijn `isDemo=true` en `verified=true`: alleen hun dem
 
 Zie `VERSIES.md` en het lockbestand voor exacte versies. `TESTRESULTATEN.md` registreert per test invoer, verwachting, waarneming, context en status.
 
-De laatste run bevat **57 geslaagde tests**. Typecheck en build zijn uitgevoerd. Browsercontrole omvatte handmatige boekingen, verversen/historie, Alle ruimtes, onbekende barcode, overboeking/annuleren en demobarcodes. Desktop-viewports 1180×820, 820×1180 en 390×844 zijn bekeken; zij bewijzen geen fysieke iPad-/telefoonwerking.
+De oorspronkelijke versie bevatte **57 geslaagde tests**. De uitgebreide versie heeft **126 geslaagde tests inclusief de optionele lokale echte-pakbontest**; standaard zijn dat 125 tests en één overgeslagen test. Zie het nieuwe pakbonrapport voor de actuele build en beperkingen. De oorspronkelijke browsercontrole omvatte handmatige boekingen, verversen/historie, Alle ruimtes, onbekende barcode, overboeking/annuleren en demobarcodes. Desktop-viewports 1180×820, 820×1180 en 390×844 zijn destijds bekeken; zij bewijzen geen fysieke iPad-/telefoonwerking. De nieuwe pakbonroute is in React/jsdom en met echte lokale OCR getest, nog niet interactief in een browser of op een iPad.
 
 Camera- en opslagfouten zijn in UI-tests nagebootst. De negen barcodepatronen zijn met de echte ZXing-softwaredecoder uit synthetische rasters gelezen. Fysieke camera, printer, echte verpakkingen, mobiel HTTPS, Bedrijfsportaal, medewerkerstaken en 30 praktijkpogingen zijn **Niet uitgevoerd**. Een volledige toegankelijkheidsaudit, 200% tekstvergroting en offline-herladen zijn eveneens niet getest. Bediening heeft zichtbare focus, labels en minimaal 48 px hoge knoppen; de hoofdtekstkleuren zijn op contrast berekend.
 
@@ -110,7 +112,7 @@ Excel-invulling is niet gebouwd. Onderzoek later alleen een kopie van de bestaan
 
 ## Bronnen
 
-De implementatiegegevens komen uit de door de gebruiker geplakte masterprompt. De bewonerswerkmap en het toelichtende Word-document zijn niet geopend, gewijzigd, uitgevoerd, gekopieerd, in Git opgenomen of naar een externe dienst gestuurd. Productgegevens/celverwijzingen uit de prompt zijn niet opnieuw uit de werkmap geverifieerd. Het Word-document is toelichting, geen extra opdracht.
+De oorspronkelijke implementatiegegevens komen uit de door de gebruiker geplakte masterprompt. Voor de uitbreiding is alleen de producttabel `Totaal!A1:E90` uit de aangeleverde werkmap gelezen. Bewonersbladen zijn niet onderzocht; macro's zijn niet uitgevoerd. De werkmap en de echte pakbonfoto zijn niet gewijzigd, gekopieerd naar dit project, in Git opgenomen of naar een externe OCR-dienst gestuurd. De foto is lokaal getest; alleen synthetische testafbeeldingen worden meegeleverd. Het toelichtende Word-document is niet geopend en vormt geen extra opdracht.
 
 [Surplus](https://surplus.nl/) is geraadpleegd als visuele referentie op 30 september 2026. Tokens zijn voorgestelde promptkleuren, geen officiële codes. Er is geen goedgekeurd logo aangeleverd; de kop is gewone tekst. Het favicon is een generiek voorraadicoon.
 

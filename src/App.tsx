@@ -7,9 +7,11 @@ import { ScanAndBook } from './screens/ScanAndBook';
 import { MovementHistory } from './screens/MovementHistory';
 import { DemoSettings } from './screens/DemoSettings';
 import { DemoBarcodes } from './screens/DemoBarcodes';
+import { DeliveryPage } from './delivery/DeliveryPage';
+import { DeliveryHistory } from './delivery/DeliveryHistory';
 import './styles.css';
 
-type Page = 'stock' | 'scan' | 'history' | 'settings' | 'barcodes';
+type Page = 'stock' | 'scan' | 'history' | 'settings' | 'barcodes' | 'delivery' | 'deliveries';
 export default function App() {
   const [page, setPage] = useState<Page>('stock');
   const [data, setData] = useState<InventorySnapshot>();
@@ -31,11 +33,13 @@ export default function App() {
   return <>
     <a className="skip" href="#main">Naar de inhoud</a>
     <header className="app-header"><div className="brand"><strong>Surplus <span>Voorraad</span></strong><span className="site-name">Ganshoek</span></div><span className="demo-status">Lokale demo: geen gedeelde voorraad</span></header>
-    <nav className="app-nav" aria-label="Hoofdnavigatie">{([['stock', 'Voorraad'], ['scan', 'Scannen & boeken'], ['history', 'Mutaties'], ['settings', 'Demo-instellingen']] as const).map(([id, label]) => <button key={id} aria-current={page === id ? 'page' : undefined} onClick={() => navigate(id)}>{label}</button>)}</nav>
+    <nav className="app-nav" aria-label="Hoofdnavigatie">{([['stock', 'Voorraad'], ['scan', 'Scannen & boeken'], ['delivery', 'Pakbon verwerken'], ['deliveries', 'Pakbonhistorie'], ['history', 'Mutaties'], ['settings', 'Demo-instellingen']] as const).map(([id, label]) => <button key={id} aria-current={page === id ? 'page' : undefined} onClick={() => navigate(id)}>{label}</button>)}</nav>
     <main id="main">{error ? <div className="error" role="alert">{error}</div> : !data ? <p role="status">Demo-voorraad laden…</p> : <>
       {page === 'stock' && <StockOverview data={data} room={room} setRoom={setRoom} book={book} scan={() => navigate('scan')} />}
       {page === 'scan' && <ScanAndBook data={data} room={room} setRoom={setRoom} initialProduct={startProduct} initialAction={action} back={() => navigate('stock')} />}
       {page === 'history' && <MovementHistory data={data} />}
+      {page === 'delivery' && <DeliveryPage data={data} />}
+      {page === 'deliveries' && <DeliveryHistory data={data} />}
       {page === 'settings' && <DemoSettings data={data} barcodes={() => navigate('barcodes')} />}
       {page === 'barcodes' && <DemoBarcodes data={data} back={() => navigate('settings')} />}
     </>}</main>

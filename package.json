@@ -19,7 +19,8 @@
     "dexie": "4.4.6",
     "jsbarcode": "3.12.3",
     "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react-dom": "^19.2.8",
+    "tesseract.js": "7.0.0"
   },
   "devDependencies": {
     "@types/jsbarcode": "3.11.4",

@@ -10,7 +10,7 @@ export interface BarcodeMapping {
   packagingLevel: 'verpakking'; quantityInStockUnits: 1; isDemo: boolean; verified: boolean;
 }
 export interface StockPosition { productId: string; locationId: string; quantityPacks: number }
-export type InputSource = 'camera' | 'manual' | 'productSearch' | 'seed';
+export type InputSource = 'camera' | 'manual' | 'productSearch' | 'seed' | 'delivery';
 export interface Movement {
   id: string; operationId: string; productId: string; locationId: string;
   type: 'OPENING' | 'IN' | 'OUT'; quantityPacks: number; stockBefore: number; stockAfter: number;

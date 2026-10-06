@@ -1,3 +1,7 @@
+# Actuele pakbonuitbreiding
+
+De resultaten van 6 oktober 2026 staan in [PAKBON-TESTRESULTATEN.md](PAKBON-TESTRESULTATEN.md). Onderstaande gegevens beschrijven de oorspronkelijke versie van 30 september; de oorspronkelijke 57 tests zijn ook in de uitgebreide versie uitgevoerd.
+
 # Testresultaten Surplus Voorraad
 
 Datum: 30 september 2026 (Europe/Amsterdam). Windows-desktop; Node.js 24.19.0; npm 9.7.2; uitsluitend fictieve data.
@@ -119,4 +123,3 @@ Een eerdere UI-run vond een probleem met DOMException-camerafouten. Dat is herst
 | GH01 | 30-09-2026 / Windows, Node 24.19.0 | npm test na Pages-configuratie | Alle tests slagen | 57/57 geslaagd | Geslaagd |
 | GH02 | 30-09-2026 / dezelfde omgeving | npm run build met relatieve base | Typecontrole slaagt en alle assets laden onder repository-map | Exitcode 0; drie relatieve HTML-assetverwijzingen wijzen naar bestaande bestanden | Geslaagd |
 | GH03 | 30-09-2026 / GitHub Actions | Installeren, testen, bouwen en publiceren op GitHub | Groene jobs en werkende HTTPS-URL | Workflow voorbereid; nog niet in een GitHub-account uitgevoerd | Niet uitgevoerd |
-

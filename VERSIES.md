@@ -18,3 +18,5 @@
 | jsdom | 30.1.1 |
 
 Alle transitieve afhankelijkheden staan in package-lock.json. Gebruik npm ci.
+
+Uitbreiding 6 oktober 2026: tesseract.js 7.0.0; tesseract.js-core 7.0.0; source-map-js 1.2.2. Exacte versies en afhankelijkheden staan in het bijgewerkte lockbestand.
