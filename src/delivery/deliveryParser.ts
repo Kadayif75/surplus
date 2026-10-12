@@ -15,8 +15,8 @@ export function spatialRows(words: OcrWord[]): string[] {
 }
 export function parseDeliveryLine(rawText: string): ParsedDeliveryLine | undefined {
   // Never strip suffixes from supplier article numbers or repair digit substitutions.
-  const article = /\b(\d{5,10})\s+((?:TENA\b).*)/i.exec(rawText)
-    ?? /\b(\d{5,10})\s+([^|]*[a-z][^|]*)/i.exec(rawText);
+  const article = /\b(\d{4,10})\s+((?:TENA\b).*)/i.exec(rawText)
+    ?? /\b(\d{4,10})\s+([^|]*[a-z][^|]*)/i.exec(rawText);
   if (!article) return undefined;
   const prefix = rawText.slice(0, article.index).replace(/[|]/g, ' ').trim();
   const before = /(?:^|\s)(-?\d+(?:[.,]\d+)?)\s*(COL|DOOS|DOZEN|VERPAKKING(?:EN)?|PAK(?:KEN)?|PACKS?)\s*$/i.exec(prefix);

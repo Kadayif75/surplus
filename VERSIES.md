@@ -22,3 +22,5 @@ Alle transitieve afhankelijkheden staan in package-lock.json. Gebruik npm ci.
 Uitbreiding 6 oktober 2026: tesseract.js 7.0.0; tesseract.js-core 7.0.0; source-map-js 1.2.2. Exacte versies en afhankelijkheden staan in het bijgewerkte lockbestand.
 
 PDF-uitbreiding 6 oktober 2026: pdfjs-dist 6.4.299; @napi-rs/canvas 1.0.10 (alleen voor de Node-testomgeving, niet voor de webapp).
+
+Besteluitbreiding 12 oktober 2026: exceljs 4.4.0 (lokaal lezen en exporteren van Excel); uuid 11.1.1 als compatibele override voor de ExcelJS-afhankelijkheid. ExcelJS is een afzonderlijke, op aanvraag geladen browserbundel.

@@ -2,6 +2,8 @@
 
 Uitbreiding van Surplus Voorraad, 6 oktober 2026. De bestaande voorraad- en barcodefuncties blijven beschikbaar.
 
+Toevoeging 12 oktober 2026: koppel bij **Bijbehorende bestelling** een opgeslagen, als **Besteld** gemarkeerd bestelplan. Volledige productleveringen kunnen de bewaarde verdeling naar Rood, Oranje en Groen overnemen; deelleveringen blijven een medewerkerkeuze. Alle regels vereisen controle en ontvangstbevestiging. Het bestelnummer is geen vervanging voor het unieke pakbonnummer. Zie [BESTELLEN.md](BESTELLEN.md).
+
 ## Werkwijze
 
 1. Open **Pakbon verwerken**. Kies **Pakbon scannen**, **Foto maken** of **Foto of PDF uploaden**. JPG/JFIF, PNG en WebP kunnen lokaal worden geopend als de browser het formaat ondersteunt. PDF’s met tekst of gescande afbeeldingen worden ondersteund. Maximaal 20 MB per bestand en 10 pagina’s per PDF; één pakbon per PDF. Upload wachtwoordbeveiligde PDF’s als onbeveiligde kopie.

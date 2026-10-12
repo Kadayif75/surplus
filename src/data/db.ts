@@ -1,6 +1,7 @@
 import Dexie, { type Table } from 'dexie';
 import type { Product, Location, BarcodeMapping, StockPosition, Movement } from '../domain/types';
 import type { ArticleAlias, DeliveryNote, ProductLocationRule } from '../delivery/types';
+import type { OrderPlan } from '../orders/types';
 
 export class InventoryDatabase extends Dexie {
   products!: Table<Product, string>;
@@ -12,6 +13,7 @@ export class InventoryDatabase extends Dexie {
   deliveries!: Table<DeliveryNote, string>;
   articleAliases!: Table<ArticleAlias, string>;
   productLocationRules!: Table<ProductLocationRule, string>;
+  orders!: Table<OrderPlan, string>;
   constructor(name = 'surplus-voorraad-demo-v1') {
     super(name);
     this.version(1).stores({
@@ -23,5 +25,6 @@ export class InventoryDatabase extends Dexie {
       deliveries: 'id, &operationId, &identityKey, &fingerprint, imageHash, processedAt',
       articleAliases: '&articleNumber, productId', productLocationRules: 'id, productId, locationId',
     });
+    this.version(3).stores({ orders: 'id, reference, status, createdAt' });
   }
 }

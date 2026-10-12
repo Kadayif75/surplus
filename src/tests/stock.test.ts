@@ -94,6 +94,6 @@ describe('Gecontroleerde barcodekoppelingen en reset', () => {
   });
   it('B05: reset herstelt standen, historie, demokoppelingen en ruimtenamen', async () => {
     await repo.bookMovement(command()); await repo.addMapping(realMapping()); await repo.renameLocations({ H1: 'Kast A', H2: 'Kast B', H3: 'Kast C' });
-    await repo.resetDemo(); await repo.initialize(); expect((await repo.db.stocks.get(['tena-760364','H1']))?.quantityPacks).toBe(10); expect(await repo.listMovements()).toHaveLength(21); expect(await repo.resolveBarcode('0001234567895')).toBeUndefined(); expect(await repo.db.mappings.count()).toBe(9); expect((await repo.listLocations())[0].name).toBe('Voorraadruimte 1');
+    await repo.resetDemo(); await repo.initialize(); expect((await repo.db.stocks.get(['tena-760364','H1']))?.quantityPacks).toBe(10); expect(await repo.listMovements()).toHaveLength(21); expect(await repo.resolveBarcode('0001234567895')).toBeUndefined(); expect(await repo.db.mappings.count()).toBe(9); expect((await repo.listLocations())[0].name).toBe('Rood');
   });
 });

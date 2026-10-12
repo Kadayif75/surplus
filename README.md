@@ -1,10 +1,12 @@
 # Surplus Voorraad · Ganshoek
 
+**Uitbreiding 12 oktober 2026:** **Bestellen & verdelen** neemt drie bewonersoverzichten voor **Rood, Oranje en Groen** over, berekent tekorten na aftrek van gecontroleerde voorraad en onderweg zijnde bestellingen, en maakt één XLSX met de totale bestelling en locatieverdeling. Een gekoppelde pakbon kan de bewaarde verdeling overnemen; deelleveringen worden door de medewerker verdeeld. Zie [BESTELLEN.md](BESTELLEN.md) en [BESTELLEN-TESTRESULTATEN.md](BESTELLEN-TESTRESULTATEN.md).
+
 **Publiceren op GitHub:** dit complete project bevat een GitHub Actions-workflow. Volg [GITHUB-PAGES.md](GITHUB-PAGES.md). Upload de uitgepakte projectinhoud één keer; een apart ZIP-bestand met de gebouwde website is niet nodig. GitHub bouwt, test en publiceert vanuit de broncode.
 
 **Uitbreiding 6 oktober 2026:** pakbonnen fotograferen of als foto/PDF uploaden, tweemaal lokaal uitlezen, handmatig controleren, COL omrekenen naar verpakkingen, per regel een ruimte kiezen en pas na ontvangstbevestiging boeken. PDF’s met tekst of scans worden per pagina verwerkt: maximaal 10 pagina’s en 20 MB, één pakbon per bestand. Afwijkende artikelcodes en nieuwe producten worden expliciet bevestigd. Foto’s en PDF’s blijven tijdelijk in geheugen. Zie [PAKBON.md](PAKBON.md) en [PAKBON-TESTRESULTATEN.md](PAKBON-TESTRESULTATEN.md).
 
-Werkende Nederlandstalige webapp met de acht producten en fictieve beginstanden uit de masterprompt. H1, H2 en H3 houden onafhankelijk voorraad bij. Eén eenheid is één ongeopende **verpakking**. Er is geen gedeelde voorraad, backend, account, bestelling, minimumvoorraad, Excel-koppeling of live Microsoft-verbinding.
+Werkende Nederlandstalige webapp met de acht producten en fictieve beginstanden uit de masterprompt. Rood, Oranje en Groen houden onafhankelijk voorraad bij; hun interne sleutels blijven H1, H2 en H3. Eén eenheid is één ongeopende **verpakking**. Er is lokale Excel-invoer, bestelplanning en Excel-export; geen gedeelde voorraad, backend, account, minimumvoorraad of live Microsoft-/leveranciersverbinding.
 
 ## Starten en controleren
 

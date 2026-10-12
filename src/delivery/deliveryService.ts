@@ -3,6 +3,7 @@ import type { Movement, Product } from '../domain/types';
 import { calculateStock, InventoryError } from '../domain/stockService';
 import { positiveInteger, validateDeliveryLine } from './deliveryValidation';
 import type { DeliveryDraft, DeliveryNote } from './types';
+import { orderDeliveryProblems } from '../orders/orderDelivery';
 
 export class DuplicateDeliveryError extends InventoryError {
   readonly previous: DeliveryNote;
@@ -14,7 +15,7 @@ export async function hashBytes(bytes: BufferSource) {
   return [...new Uint8Array(digest)].map(b => b.toString(16).padStart(2, '0')).join('');
 }
 export function validateNewProduct(product: Product) {
-  if (!product.id || !/^\d{5,10}$/.test(product.tenaArticleNumber) || !product.name.trim() || product.name.length > 160 ||
+  if (!product.id || !/^\d{4,10}$/.test(product.tenaArticleNumber) || !product.name.trim() || product.name.length > 160 ||
     !positiveInteger(String(product.packsPerBox)) || !positiveInteger(String(product.piecesPerPack)) || !product.assortmentVerified || product.stockUnit !== 'verpakking') {
     throw new InventoryError('Controleer artikelnummer, productnaam en verpakking van het nieuwe product.');
   }
@@ -36,7 +37,7 @@ export async function confirmDelivery(db: InventoryDatabase, draft: DeliveryDraf
     normalizeIdentity(draft.supplier), draft.deliveryDate,
     draft.lines.map(l => [l.articleNumber.trim(), l.productId, l.quantityText, l.unit, l.packsPerBoxText, l.piecesPerPackText, l.excluded]).sort((a,b) => JSON.stringify(a).localeCompare(JSON.stringify(b))),
   ])));
-  return db.transaction('rw', [db.deliveries, db.products, db.locations, db.stocks, db.movements, db.articleAliases, db.mappings], async () => {
+  return db.transaction('rw', [db.deliveries, db.products, db.locations, db.stocks, db.movements, db.articleAliases, db.mappings, db.orders], async () => {
     const existing = await db.deliveries.where('operationId').equals(draft.operationId).first();
     if (existing) {
       if (existing.commandSignature !== signature) throw new InventoryError('Deze ontvangst is al bevestigd met andere gegevens.');
@@ -51,6 +52,9 @@ export async function confirmDelivery(db: InventoryDatabase, draft: DeliveryDraf
     const aliases = await db.articleAliases.toArray();
     const mappings = await db.mappings.toArray();
     const received = draft.lines.filter(l => !l.excluded);
+    const order = draft.orderId ? await db.orders.get(draft.orderId) : undefined;
+    const orderProblems = orderDeliveryProblems(order, draft, { products, locations, stocks: [], movements: [], mappings });
+    if (orderProblems.length) throw new InventoryError(orderProblems.join(' '));
     // Validate all staged changes before any writes. Nothing can survive a later failure.
     const staged = new Map<string, Product>();
     for (const line of received) if (line.newProduct) {
@@ -92,11 +96,16 @@ export async function confirmDelivery(db: InventoryDatabase, draft: DeliveryDraf
         quantityPacks, locationId: line.destinationLocationId, confidence: validation.confidence,
         manuallyReviewed: line.manuallyReviewed, checks: validation.checks, rawText: line.rawText, sourcePage: line.sourcePage });
     }
+    if (order) {
+      for (const item of order.lines) for (const allocation of item.allocations) allocation.receivedPacks += received.filter(line => line.productId === item.product.id && line.destinationLocationId === allocation.locationId).reduce((sum, line) => sum + validateDeliveryLine(line, products, locations, aliases, false, mappings).quantityPacks!, 0);
+      if (order.lines.every(item => item.allocations.every(allocation => allocation.receivedPacks === allocation.orderedPacks))) order.status = 'Ontvangen';
+      await db.orders.put(order);
+    }
     const note: DeliveryNote = { id: draft.id, operationId: draft.operationId, identityKey, fingerprint,
       imageHash: draft.imageHash || undefined, deliveryNumber: draft.deliveryNumber.trim(), supplier: draft.supplier.trim(),
       deliveryDate: draft.deliveryDate, createdAt: draft.createdAt, processedAt, actor: 'Demogebruiker', status: 'Verwerkt',
       lines, excludedLines: draft.lines.filter(l => l.excluded).map(l => ({ rawText: l.rawText, reason: l.exclusionReason, sourcePage: l.sourcePage })),
-      movementIds, commandSignature: signature };
+      movementIds, commandSignature: signature, orderId: draft.orderId };
     await db.deliveries.add(note);
     return note;
   });

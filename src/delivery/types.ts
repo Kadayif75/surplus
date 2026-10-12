@@ -13,7 +13,7 @@ export interface DeliveryLine extends ParsedDeliveryLine {
 export interface DeliveryDraft {
   id: string; operationId: string; deliveryNumber: string; supplier: string;
   deliveryDate: string; createdAt: string; imageHash: string; lines: DeliveryLine[];
-  declaredColli?: number; completenessConfirmed: boolean;
+  declaredColli?: number; completenessConfirmed: boolean; orderId?: string;
 }
 export interface ArticleAlias { articleNumber: string; productId: string; verified: boolean; reason: string }
 export interface ProductLocationRule { id: string; productId: string; locationId: string; verified: boolean; reason: string; priority?: number }
@@ -32,5 +32,5 @@ export interface DeliveryNote {
   deliveryNumber: string; supplier: string; deliveryDate: string; createdAt: string; processedAt: string;
   status: 'Verwerkt'; actor: 'Demogebruiker'; lines: ProcessedLine[];
   excludedLines: { rawText: string; reason: string; sourcePage?: number }[];
-  movementIds: string[]; commandSignature: string;
+  movementIds: string[]; commandSignature: string; orderId?: string;
 }

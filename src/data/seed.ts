@@ -16,7 +16,7 @@ export const seedProducts: Product[] = rows.map(([article, name, variant, packsP
   stockUnit: 'verpakking', sourceReference: `Aangeleverde werkmap: Totaal!A${row}:E${row}`, assortmentVerified: false,
 }));
 export const seedLocations: Location[] = [1, 2, 3].map(n => ({
-  id: `H${n}`, name: `Voorraadruimte ${n}`, description: 'Naam en plaats nog te bevestigen door Kim.', locationVerified: false,
+  id: `H${n}`, name: ['Rood', 'Oranje', 'Groen'][n - 1], description: 'Locatienaam bevestigd door gebruiker.', locationVerified: true,
 }));
 export const seedMappings: BarcodeMapping[] = seedProducts.map((product, i) => ({
   id: `demo-${i + 1}`, rawValue: `DEMO-SURPLUS-${String(i + 1).padStart(3, '0')}`, symbology: 'CODE_128',
@@ -44,5 +44,12 @@ export async function writeSeed(db: InventoryDatabase) {
 export async function initializeDemo(db: InventoryDatabase) {
   await db.transaction('rw', [db.products, db.locations, db.mappings, db.stocks, db.movements, db.meta], async () => {
     if (!(await db.meta.get('seedVersion'))) await writeSeed(db);
+    if (!(await db.meta.get('colourLocationNames'))) {
+      for (const location of await db.locations.toArray()) {
+        const seed = seedLocations.find(candidate => candidate.id === location.id);
+        if (seed && location.name === `Voorraadruimte ${location.id.slice(1)}`) await db.locations.put({ ...location, name: seed.name, description: seed.description, locationVerified: true });
+      }
+      await db.meta.put({ key: 'colourLocationNames', value: 1 });
+    }
   });
 }

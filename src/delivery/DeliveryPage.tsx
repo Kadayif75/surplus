@@ -11,10 +11,14 @@ import { analyzeDeliveryPages } from './deliveryDocumentOcr';
 import { checkDocumentFile, openDeliveryPdf, type DeliveryPdf } from './deliveryPdf';
 import { DeliveryScanner } from './DeliveryScanner';
 import { DeliveryReview, emptyLine } from './DeliveryReview';
+import type { OrderPlan } from '../orders/types';
+import { OrderReceiptDistribution } from '../orders/OrderReceiptDistribution';
+import { orderDeliveryProblems } from '../orders/orderDelivery';
 
 export function DeliveryPage({ data }: { data: InventorySnapshot }) {
   const [draft, setDraft] = useState<DeliveryDraft>(createDraft);
   const [aliases, setAliases] = useState<ArticleAlias[]>([]);
+  const [orders, setOrders] = useState<OrderPlan[]>([]);
   const [canvas, setCanvas] = useState<HTMLCanvasElement>();
   const [preview, setPreview] = useState('');
   const [pageCount, setPageCount] = useState(0);
@@ -39,7 +43,8 @@ export function DeliveryPage({ data }: { data: InventorySnapshot }) {
   useEffect(() => {
     alive.current = true;
     const subscription = liveQuery(() => inventory.db.articleAliases.toArray()).subscribe({ next: setAliases, error: () => setError('Productkoppelingen kunnen niet worden geladen. Heropen de app.') });
-    return () => { alive.current = false; generation.current++; controller.current?.abort(); void pdf.current?.destroy(); subscription.unsubscribe(); };
+    const orderSubscription = liveQuery(() => inventory.db.orders.toArray()).subscribe({ next: setOrders, error: () => setError('Bestellingen kunnen niet worden geladen. Heropen de app.') });
+    return () => { alive.current = false; generation.current++; controller.current?.abort(); void pdf.current?.destroy(); subscription.unsubscribe(); orderSubscription.unsubscribe(); };
   }, []);
   function reset() {
     generation.current++; controller.current?.abort(); void pdf.current?.destroy(); pdf.current = undefined; lock.current = false; setPageCount(0); setPageNumber(1); setLoading(false); setReading(false); setBusy(false); setProgress('');
@@ -49,7 +54,7 @@ export function DeliveryPage({ data }: { data: InventorySnapshot }) {
     if (!file) return;
     controller.current?.abort(); void pdf.current?.destroy(); pdf.current = undefined;
     const token = ++generation.current; const control = new AbortController(); controller.current = control;
-    setError(''); setScanner(false); setLoading(true); setCanvas(undefined); setPreview(''); setPageCount(0); setPageNumber(1); setDraft(createDraft()); setDuplicate(undefined);
+    setError(''); setScanner(false); setLoading(true); setCanvas(undefined); setPreview(''); setPageCount(0); setPageNumber(1); setDraft(current => ({ ...createDraft(), orderId: current.orderId })); setDuplicate(undefined);
     let opened: DeliveryPdf | undefined;
     try {
       const kind = checkDocumentFile(file); const bytes = await file.arrayBuffer(); const imageHash = await hashBytes(bytes);
@@ -69,7 +74,7 @@ export function DeliveryPage({ data }: { data: InventorySnapshot }) {
       if (!alive.current || generation.current !== token) { image.width = 0; image.height = 0; return; }
       const thumbnail = image.toDataURL('image/jpeg', .95);
       pdf.current = opened; setPageCount(opened?.pageCount ?? 0); opened = undefined;
-      setCanvas(image); setPreview(thumbnail); setDraft({ ...createDraft(), imageHash });
+      setCanvas(image); setPreview(thumbnail); setDraft(current => ({ ...createDraft(), imageHash, orderId: current.orderId }));
     } catch (e) { if (alive.current && generation.current === token && !control.signal.aborted) setError(e instanceof InventoryError ? e.message : 'Dit bestand kan niet worden geopend. Kies een geldige PDF, JPG- of PNG-afbeelding.'); }
     finally { await opened?.destroy(); if (alive.current && generation.current === token) setLoading(false); }
   }
@@ -109,8 +114,11 @@ export function DeliveryPage({ data }: { data: InventorySnapshot }) {
   }
   const received = draft.lines.filter(l => !l.excluded);
   const validations = received.map(l => validateDeliveryLine(l, data.products, data.locations, aliases, received.filter(other => other.articleNumber === l.articleNumber).length > 1, data.mappings));
-  const ready = !!draft.deliveryNumber.trim() && !!draft.supplier.trim() && draft.completenessConfirmed && received.length > 0 && validations.every(v => v.canBook) && draft.lines.every(l => !l.excluded || !!l.exclusionReason.trim());
+  const selectedOrder = orders.find(order => order.id === draft.orderId);
+  const orderProblems = orderDeliveryProblems(selectedOrder, draft, data);
+  const ready = !!draft.deliveryNumber.trim() && !!draft.supplier.trim() && draft.completenessConfirmed && received.length > 0 && validations.every(v => v.canBook) && draft.lines.every(l => !l.excluded || !!l.exclusionReason.trim()) && !orderProblems.length;
   const pendingActions = [
+    ...orderProblems,
     ...(!draft.deliveryNumber.trim() ? ['Vul het pakbon-/leveringsnummer in.'] : []),
     ...(!draft.supplier.trim() ? ['Vul de leverancier in.'] : []),
     ...(!received.length ? ['Neem minimaal één productregel op.'] : []),
@@ -140,6 +148,7 @@ export function DeliveryPage({ data }: { data: InventorySnapshot }) {
     <div className="page-heading"><div><p className="eyebrow">Binnenkomende levering</p><h1>Pakbon verwerken</h1><p>Foto of PDF kiezen → uitlezen → controleren → ontvangst bevestigen.</p></div></div>
     <p className="notice">Tekstherkenning vindt op dit apparaat plaats. Foto’s en PDF’s worden niet naar een OCR-dienst gestuurd en worden niet opgeslagen. Voorraad en historie blijven in deze browser.</p>
     {error && <p className="error" role="alert">{error}</p>}
+    <section className="card"><label>Bijbehorende bestelling<select value={draft.orderId ?? ''} disabled={loading || reading || busy || !!retryDraft.current || !!duplicate} onChange={e => setDraft(current => ({ ...current, orderId: e.target.value || undefined, completenessConfirmed: false, lines: current.lines.map(line => ({ ...line, manuallyReviewed: false })) }))}><option value="">Zonder bestelplan — bestemmingen zelf kiezen</option>{orders.filter(order => order.status === 'Besteld' || order.id === draft.orderId).map(order => <option key={order.id} value={order.id}>{order.reference} · {order.supplier} · {order.status}</option>)}</select></label><p className="small">Kies de bestelling op basis van jullie bestelreferentie. Een bestelnummer en pakbonnummer kunnen verschillen.</p></section>
     {duplicate && <section className="card"><h2>Eerder verwerkt</h2><p>{duplicate.supplier} · {duplicate.deliveryNumber} · {new Date(duplicate.processedAt).toLocaleString('nl-NL')}</p>{duplicate.lines.map(l => <p key={l.id}>{l.productName}: {l.quantityPacks} verpakkingen</p>)}<p>Er is niets opnieuw geboekt.</p></section>}
     {!draft.lines.length && !reading && !loading && <section className="card"><h2>Pakbon invoeren</h2><div className="actions"><button className="primary" onClick={() => setScanner(true)}>Pakbon scannen</button><button className="secondary" onClick={() => photoInput.current?.click()}>Foto maken</button><button onClick={() => fileInput.current?.click()}>Foto of PDF uploaden</button></div><p className="small">Maximaal 20 MB. PDF: één pakbon per bestand, maximaal 10 pagina’s.</p><div className="actions"><button onClick={() => setDraft({ ...draft, lines: [emptyLine()] })}>Handmatig invoeren</button></div><input className="visually-hidden" ref={fileInput} type="file" accept="image/*,.jfif,application/pdf,.pdf" aria-label="Pakbonfoto of PDF kiezen" onChange={e => { void chooseFile(e.target.files?.[0]); e.target.value = ''; }} /><input className="visually-hidden" ref={photoInput} type="file" accept="image/*" capture="environment" aria-label="Pakbonfoto maken" onChange={e => { void chooseFile(e.target.files?.[0]); e.target.value = ''; }} /></section>}
     {loading && <section className="card" role="status"><p>Document wordt geopend…</p><button onClick={reset}>Openen annuleren</button></section>}
@@ -148,7 +157,7 @@ export function DeliveryPage({ data }: { data: InventorySnapshot }) {
       {preview && <aside className="card delivery-photo"><h2>{pageCount ? `PDF-pagina ${pageNumber} van ${pageCount}` : 'Controleer de foto'}</h2>{pageCount > 1 && <div className="actions"><button disabled={loading || reading || busy || pageNumber <= 1} onClick={() => void showPage(pageNumber - 1)}>Vorige pagina</button><button disabled={loading || reading || busy || pageNumber >= pageCount} onClick={() => void showPage(pageNumber + 1)}>Volgende pagina</button></div>}<img src={preview} alt={`Tijdelijke pakbon${pageCount ? `, PDF-pagina ${pageNumber}` : 'foto'}`} /><details className="validation-details"><summary>Document vergroten voor regelcontrole</summary><div className="delivery-image-scroll"><img src={preview} alt="Vergrote tijdelijke pakbon; schuif om alle regels te bekijken" style={{ width: canvas?.width }} /></div></details><p>{pageCount ? 'Alle PDF-pagina’s worden uitgelezen. Controleer elke pagina, ook pagina’s waarop geen producten zijn herkend.' : 'Vergelijk alle regels met de foto. Draai deze vóór het uitlezen als de tekst niet rechtop staat.'}</p><div className="actions">{!pageCount && <button disabled={loading || reading || busy || !!retryDraft.current || !!draft.lines.length} onClick={rotate}>Foto 90° draaien</button>}{!draft.lines.length && <button className="primary" disabled={loading || reading} onClick={() => void read()}>Pakbon uitlezen</button>}</div></aside>}
       <div>
         {reading && <section className="card" role="status"><h2>Pakbon wordt uitgelezen</h2><p>{progress}</p><div className="actions"><button onClick={reset}>Uitlezen annuleren</button></div></section>}
-        {!!draft.lines.length && <><DeliveryReview draft={draft} data={data} aliases={aliases} change={setDraft} disabled={busy || !!retryDraft.current || !!duplicate} />
+        {!!draft.lines.length && <>{selectedOrder && <OrderReceiptDistribution order={selectedOrder} draft={draft} data={data} change={setDraft} disabled={busy || !!retryDraft.current || !!duplicate} />}<DeliveryReview draft={draft} data={data} aliases={aliases} change={setDraft} disabled={busy || !!retryDraft.current || !!duplicate} />
           <section className="card delivery-final"><h2>Voorraad na bevestiging</h2><p>Alle aantallen hieronder zijn ongeopende verpakkingen.</p><div className="table-wrap"><table><thead><tr><th>Product</th><th>Bestemming</th><th>Ontvangen</th><th>Voorraad</th></tr></thead><tbody>{received.map((line,index) => {
             const product = line.newProduct ?? data.products.find(p => p.id === line.productId); const quantity = validations[index].quantityPacks;
             const before = ((busy || retryDraft.current) && receiptBefore.current ? receiptBefore.current : data.stocks).find(s => s.productId === line.productId && s.locationId === line.destinationLocationId)?.quantityPacks ?? (line.newProduct ? 0 : undefined);
