@@ -1,45 +1,35 @@
-# Bestellen en verdelen: uitgevoerde tests
+# Excel samenvoegen: uitgevoerde tests
 
-12 oktober 2026. Windows, Node 24.19.0, npm 9.7.2, Vitest 5.0.3, jsdom, fake-indexeddb en ExcelJS 4.4.0.
+13 oktober 2026. Windows, Node 24.19.0, Vitest 5.0.3, jsdom, fake-indexeddb, JSZip 3.10.1. ExcelJS wordt alleen als extra lezer bij controles en bestaande services gebruikt; het samengevoegde bestand wordt niet opnieuw opgebouwd door ExcelJS.
 
 ## Resultaat
 
-**169 tests geslaagd, één overgeslagen**, tien testbestanden. De aangeleverde XLSM is in deze run meegenomen via een optionele lokale test. De optionele echte pakbonfoto is overgeslagen. De standaardrun zonder lokale bijlagen heeft **168 geslaagde tests en twee overgeslagen tests**. De eerdere voorraad-, barcode-, OCR-, PDF- en pakbonregressies slagen nog steeds.
+De definitieve run heeft **175 geslaagde tests en één overgeslagen test**, elf testbestanden, inclusief de lokale XLSM-proeven en de regressietest voor **Zakken**. Zonder de lokale bijlagen zijn dat **173 geslaagde tests en drie overgeslagen optionele tests**. De optionele echte pakbonfoto is in de definitieve run overgeslagen.
 
-Typecheck en productiebuild slagen. npm-audit meldt nul bekende kwetsbaarheden. De build bevat een bestaande omvangwaarschuwing; ExcelJS wordt als aparte bundel pas op aanvraag geladen.
+Typecheck en productiebuild zijn geslaagd; npm-audit meldt nul bekende kwetsbaarheden. De JSZip-bundel wordt pas geladen bij Excel-invoer. De bestaande omvangwaarschuwing van de hoofdbundel blijft aanwezig.
 
-## Nieuwe controles
+## Documentbehoud en samenvoeging
 
-| Controle | Waarneming |
-|---|---|
-| Behoefte in daggebruik, weken en verpakkingen | Correct omgerekend; aanwezige voorraad eerst afgetrokken en dan per locatie op dozen afgerond |
-| Genoeg voorraad of nulbehoefte | Geen negatieve of onnodige bestelling; een overschot wordt niet automatisch naar een andere locatie geschoven |
-| Ontbrekende locatie, negatief daggebruik en overflow | Berekening geweigerd met uitleg |
-| Dubbele actieve artikelcode en conflicterende productnaam | Niet stil samengevoegd of aan een verkeerd assortimentproduct gekoppeld |
-| Viercijferige aanvullende artikelcode | Letterlijk behouden, ook bij pakbonparsing; geen nullen toegevoegd |
-| Tien gelijktijdige opslagpogingen | Eén bestelplan, bestaande voorraad ongewijzigd, gewijzigde inhoud bij hetzelfde id geweigerd |
-| Ontbrekende medewerkercontrole of onbevestigde nieuwe producten | Opslaan geblokkeerd |
-| Nieuwe producten met fysiek getelde beginvoorraad | Beginstanden verlagen het tekort en krijgen openingsmutaties; bestaande standen blijven intact |
-| Veranderde voorraad na opstellen | Oud bestelplan geweigerd |
-| Concept en Besteld | Concept telt niet als onderweg; Besteld telt het nog te ontvangen restant mee |
-| Deellevering en nieuwe bestelberekening | Ontvangen deel zit in actuele voorraad; alleen restant telt als onderweg, geen dubbeltelling |
-| Fout bij toevoeging van een nieuw product | Hele bestelplan en nieuwe gegevens teruggedraaid |
-| Volledige ontvangst over drie locaties | Exacte verdeling en één boeking bij herhaling; bestelling wordt Ontvangen |
-| Deellevering en retry | Ontvangen deel slechts eenmaal verwerkt; restant blijft open |
-| Te veel ontvangen, onbekend bestelproduct, ongeldige verdeelsom of bestemming | Ontvangst geblokkeerd |
-| Opslagfout na orderbijwerking | Order, ontvangst, mutaties en voorraad samen teruggedraaid |
-| Database-upgrade van schema 2 naar 3 | Stand 17 blijft 17, nieuwe besteltabel leeg, standaardnamen aangepast en eigen naam behouden |
-| Demo-reset | Bestellingen verwijderd; locaties blijven Rood, Oranje en Groen |
-| Opgeslagen formule-uitkomst nul en ontbrekende uitkomst | Nul blijft geldig; ontbrekende berekening wordt niet als nul overgenomen |
-| Aangeleverde XLSM | Werkelijk lokaal gelezen; producttotalen en aanvullende ontbrekende dagtotalen herkend, zonder macro-uitvoering of bronbewerking |
-| XLSX-export | Opnieuw als Excel geopend; totaal 11 dozen, verdeling 3/4/4, artikelcode als tekst en aantallen numeriek, één tabblad met bestelling en verdeling |
+- Alle bewoners uit de drie bronnen worden meegenomen, inclusief hun dag- en nachtregels en invoer in productkolommen.
+- Ingevulde bestellingen 2, 3 en 4 worden samen 9 in de oorspronkelijke kolom M; de locatieverdeling blijft 2/3/4.
+- Een ingevulde nul wordt niet door een advies vervangen. Bij een lege bestelling wordt het bronadvies uit het werkelijke bewonersgebruik berekend, ook wanneer een opgeslagen verbruikscache verouderd is.
+- Dozen en Zakken houden hun betekenis. Verpakkingen worden bij ontvangst niet ten onrechte opnieuw als dozen vermenigvuldigd.
+- Bij meer bewoners worden rijopmaak, samengevoegde cellen, residentformules, validatie en afdrukbereik uitgebreid.
+- Gedeelde residentformules worden naar de juiste nieuwe celverwijzingen vertaald. De formules voor dag-/nachtidentificatie en rijverwijzingen zijn gecontroleerd.
+- Herhaald samenvoegen verandert de ingelezen bron niet en verdubbelt geen reeds samengevoegde gegevens.
+- Het echte aangeleverde XLSM is als drie lokale testinvoeren gelezen. De bewonersaantallen tellen exact op. Alle zes oorspronkelijke tabbladen en de verborgen tabbladstatus blijven aanwezig.
+- Alle package-onderdelen behalve de twee bewerkte worksheets en workbook.xml zijn inhoudelijk byte voor byte gelijk aan de eerste bron, inclusief VBA, stijlen, tekeningen, afbeeldingen en relaties.
 
-Vier React-componenttests controleren de route met nagebootste bestandselectie en de echte lokale services: drie locatie-invoeren, verplichte controle, één bestelplan, markeren als verstuurd, gekoppelde pakbon, automatische volledige verdeling, handmatige deellevering, expliciete nulbevestiging voor ontbrekend aanvullend gebruik en hernieuwde controle na periodewijziging.
+De oorspronkelijke kop en adviesbestellijst zijn gerenderd en visueel vergeleken met het samengevoegde resultaat: groene TENA-opmaak, logo en productafbeeldingen, kolombreedtes, tabelkoppen en bestaande advies-/bestelkolommen blijven behouden. Alleen de afdelingsaanduiding en samengevoegde inhoud veranderen.
 
-De volledige schermtest boekt 18 verpakkingen naar Rood, 24 naar Oranje en 24 naar Groen en controleert de ontvangstaandelen op de opgeslagen bestelling. Alleen bevestiging schrijft de voorraad. De daadwerkelijke Excel-reader en export worden apart met gegenereerde fictieve gegevens en de bestaande lokale XLSM getest; alleen productgegevens komen terug uit de reader.
+## Eenvoudig scherm en ontvangst
 
-## Grenzen van het bewijs
+Drie React-componenttests gebruiken de echte samenvoegfunctie en lokale diensten: er staan alleen drie bestandsvelden, zonder vinkjes of extra metadata-invoer. Na drie bestanden is de download beschikbaar; een onleesbare vervanging maakt het oude resultaat ongeldig en toont één melding; ook een lege bestelling kan worden gedownload.
 
-Er zijn nog geen drie werkelijk ingevulde locatiebestanden, echte bestellingen of leveranciersontvangsten als praktijkproef verwerkt. Een fysieke iPad/Safari en native Excel-weergave van het exportbestand zijn niet getest. Schermtests lopen in React/jsdom, Excel-export wordt inhoudelijk opnieuw geopend; dit vervangt geen praktijkcontrole van download, afdruk en iPad-prestaties.
+Bij downloaden wordt de productverdeling eenmaal opgeslagen. De test controleert dat bewonersnamen niet in IndexedDB terechtkomen en dat voorraad en assortiment intact blijven. De nieuwe samenvoeging is bij pakbonverwerking te kiezen. Een gedeeltelijke ontvangst op een samenvoeging wordt atomair verwerkt en houdt het resterende aantal open. De bestaande voorraad-, barcode-, OCR-, PDF-, retry-, rollback- en database-upgradetests blijven van toepassing.
 
-De voorraad blijft lokaal per browser. Geen server, account, synchronisatie, back-up, automatische verzending, voorraadtransfer of automatische behandeling van meerleveringen/vervangende producten is toegevoegd. Bestaande beginstanden blijven fictief; een medewerker moet de fysieke voorraad controleren voordat een echte bestelling wordt gemaakt.
+## Beperkingen
+
+De drie echte ingevulde locatiebestanden zijn nog niet als praktijkproef beschikbaar. De echte-templateproef gebruikt drie kopieën om behoud en optelling te controleren; dit is geen bestelling voor echte locaties. Alleen synthetische fixtures staan in het project. De aangeleverde XLSM en de lokale QA-uitvoer zijn niet in Git opgenomen.
+
+Native Excel-macro-uitvoering, Excel-afdruk en een fysieke iPad/Safari zijn nog niet getest. Macrobestanden zijn behouden en visuele layout is gerenderd; daarmee is niet bewezen dat iedere macro een uitgebreid bewonersbereik automatisch ondersteunt. De app blijft lokaal per browser.

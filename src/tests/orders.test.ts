@@ -8,7 +8,7 @@ import { InventoryDatabase } from '../data/db';
 import { LocalInventoryRepository } from '../data/inventoryRepository';
 import { calculateOrder, ORDER_LOCATION_IDS } from '../orders/orderCalculation';
 import { saveOrder, markOrderSent } from '../orders/orderService';
-import { readDemandExcel, exportOrderExcel } from '../orders/orderExcel';
+import { readDemandExcel } from '../orders/orderExcel';
 import { distributeDeliveryLine, orderDeliveryProblems } from '../orders/orderDelivery';
 import { confirmDelivery, createDraft } from '../delivery/deliveryService';
 import { emptyLine } from '../delivery/DeliveryReview';
@@ -155,10 +155,6 @@ describe('Excel-invoer en gezamenlijk bestelbestand', () => {
   });
   it('ontbrekende opgeslagen formule-uitkomst wordt geen nul', async () => { await expect(readDemandExcel(await excelFixture(false))).rejects.toThrow('opnieuw berekenen'); });
   it('een opgeslagen formule-uitkomst van nul blijft geldig nul', async () => { expect((await readDemandExcel(await excelFixture(true, 0))).rows[0].dailyPieces).toBe(0); });
-  it('export bevat totaal en alle drie locaties met numerieke aantallen en zonder bewoners', async () => {
-    const workbook = new ExcelJS.Workbook(); await workbook.xlsx.load((await exportOrderExcel(plan(), { H1: 'Rood', H2: 'Oranje', H3: 'Groen' })).buffer);
-    const sheet = workbook.getWorksheet('Bestelling en verdeling')!; expect(sheet.getCell('E6').value).toBe(11); expect(['F6', 'G6', 'H6'].map(cell => sheet.getCell(cell).value)).toEqual([3, 4, 4]); expect(sheet.getCell('A6').value).toBe('760364'); expect(workbook.worksheets).toHaveLength(1);
-  });
   it.skipIf(!process.env.SV_REAL_BEWONERS)('aangeleverde XLSM wordt alleen gelezen, zonder macro-uitvoering of bewerking', async () => {
     const bytes = await fs.readFile(process.env.SV_REAL_BEWONERS!); const result = await readDemandExcel(Uint8Array.from(bytes).buffer); expect(result.sourceWeeks).toBe(2); expect(result.rows.some(row => row.articleNumber === '791628')).toBe(true); expect(JSON.stringify(result)).not.toContain('Bewonersoverzicht!');
   });

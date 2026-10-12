@@ -1,6 +1,6 @@
 # Surplus Voorraad · Ganshoek
 
-**Uitbreiding 12 oktober 2026:** **Bestellen & verdelen** neemt drie bewonersoverzichten voor **Rood, Oranje en Groen** over, berekent tekorten na aftrek van gecontroleerde voorraad en onderweg zijnde bestellingen, en maakt één XLSX met de totale bestelling en locatieverdeling. Een gekoppelde pakbon kan de bewaarde verdeling overnemen; deelleveringen worden door de medewerker verdeeld. Zie [BESTELLEN.md](BESTELLEN.md) en [BESTELLEN-TESTRESULTATEN.md](BESTELLEN-TESTRESULTATEN.md).
+**Vereenvoudigd 13 oktober 2026:** **Excel samenvoegen** leest drie bewonersoverzichten voor **Rood, Oranje en Groen** en maakt één document met alle bewonersregels in de oorspronkelijke TENA-opmaak. Tabbladen, logo's en macrobestanden blijven behouden. Het scherm heeft drie bestandsvelden, een klein besteloverzicht en één downloadknop. De locatieverdeling wordt automatisch voor latere pakbonontvangst bewaard. Zie [BESTELLEN.md](BESTELLEN.md) en [BESTELLEN-TESTRESULTATEN.md](BESTELLEN-TESTRESULTATEN.md).
 
 **Publiceren op GitHub:** dit complete project bevat een GitHub Actions-workflow. Volg [GITHUB-PAGES.md](GITHUB-PAGES.md). Upload de uitgepakte projectinhoud één keer; een apart ZIP-bestand met de gebouwde website is niet nodig. GitHub bouwt, test en publiceert vanuit de broncode.
 

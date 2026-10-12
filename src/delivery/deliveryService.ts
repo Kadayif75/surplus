@@ -97,6 +97,7 @@ export async function confirmDelivery(db: InventoryDatabase, draft: DeliveryDraf
         manuallyReviewed: line.manuallyReviewed, checks: validation.checks, rawText: line.rawText, sourcePage: line.sourcePage });
     }
     if (order) {
+      if (order.sourceKind === 'merged-workbooks' && order.status === 'Concept') order.status = 'Besteld';
       for (const item of order.lines) for (const allocation of item.allocations) allocation.receivedPacks += received.filter(line => line.productId === item.product.id && line.destinationLocationId === allocation.locationId).reduce((sum, line) => sum + validateDeliveryLine(line, products, locations, aliases, false, mappings).quantityPacks!, 0);
       if (order.lines.every(item => item.allocations.every(allocation => allocation.receivedPacks === allocation.orderedPacks))) order.status = 'Ontvangen';
       await db.orders.put(order);

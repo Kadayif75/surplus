@@ -6,7 +6,7 @@ import { validateDeliveryLine } from '../delivery/deliveryValidation';
 
 export function orderDeliveryProblems(order: OrderPlan | undefined, draft: DeliveryDraft, data: InventorySnapshot): string[] {
   if (!draft.orderId) return [];
-  if (!order || order.id !== draft.orderId || order.status !== 'Besteld') return ['Kies een nog openstaande bestelling die als Besteld is gemarkeerd.'];
+  if (!order || order.id !== draft.orderId || (order.status !== 'Besteld' && !(order.sourceKind === 'merged-workbooks' && order.status === 'Concept'))) return ['Kies een nog openstaande bestelling of samenvoeging.'];
   const amounts = new Map<string, number>(); const problems: string[] = [];
   for (const line of draft.lines.filter(item => !item.excluded)) {
     const item = order.lines.find(candidate => candidate.product.id === line.productId);
