@@ -33,3 +33,9 @@ Bij downloaden wordt de productverdeling eenmaal opgeslagen. De test controleert
 De drie echte ingevulde locatiebestanden zijn nog niet als praktijkproef beschikbaar. De echte-templateproef gebruikt drie kopieën om behoud en optelling te controleren; dit is geen bestelling voor echte locaties. Alleen synthetische fixtures staan in het project. De aangeleverde XLSM en de lokale QA-uitvoer zijn niet in Git opgenomen.
 
 Native Excel-macro-uitvoering, Excel-afdruk en een fysieke iPad/Safari zijn nog niet getest. Macrobestanden zijn behouden en visuele layout is gerenderd; daarmee is niet bewezen dat iedere macro een uitgebreid bewonersbereik automatisch ondersteunt. De app blijft lokaal per browser.
+
+## Deployherstel: afzonderlijke testprocessen
+
+13 oktober 2026: GitHub-run `38319191874` stopte tijdens `npm test` met `Segmentation fault (core dumped)` en exitcode 139; de bouw- en publicatiestappen werden daardoor overgeslagen. Vitest gebruikte threads terwijl de PDF-tests native canvas laden. De testopdracht gebruikt nu `--pool forks`, de door Vitest beschreven oplossing voor native-modulecrashes in workerthreads. Er zijn geen tests uitgezet en de workflow blijft tests en typecontrole verplicht uitvoeren.
+
+De volledige lokale controle met deze opdracht slaagt: **173 tests geslaagd, drie optionele tests overgeslagen**, elf testbestanden. Typecontrole en productiebuild slagen eveneens. De drie overgeslagen tests gebruiken private lokale bijlagen die niet op GitHub staan.

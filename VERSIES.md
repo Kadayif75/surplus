@@ -26,3 +26,5 @@ PDF-uitbreiding 6 oktober 2026: pdfjs-dist 6.4.299; @napi-rs/canvas 1.0.10 (alle
 Besteluitbreiding 12 oktober 2026: exceljs 4.4.0 (lokaal lezen en exporteren van Excel); uuid 11.1.1 als compatibele override voor de ExcelJS-afhankelijkheid. ExcelJS is een afzonderlijke, op aanvraag geladen browserbundel.
 
 Vereenvoudiging 13 oktober 2026: jszip 3.10.1 en browser-DOM voor behoud van het bestaande XLSM/XLSX-pakket. De nieuwe samenvoegroute gebruikt de oorspronkelijke werkmap; de eigen Excel-export is verwijderd. ExcelJS blijft beschikbaar voor bestaande lees-/rekentests en wordt niet door het nieuwe samenvoegscherm geladen.
+
+Deployherstel 13 oktober 2026: Vitest draait met `--pool forks`, zodat de native canvas- en PDF-tests in afzonderlijke Node-processen draaien. Met `--pool threads` crashte de Ubuntu-build op GitHub tijdens de tests met `Segmentation fault (core dumped)` (exitcode 139). Alle tests blijven actief; de test- en bouwstappen blijven vereist voor publicatie. Zie de [Vitest-uitleg over native modules](https://vitest.dev/guide/common-errors#segfaults-and-native-code-errors).
