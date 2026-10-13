@@ -16,13 +16,15 @@ Een apart bestand `Surplus-Voorraad-GitHub-Pages.zip` is met deze route niet nod
 8. Ga naar **Settings → Pages** en open de getoonde website-URL. Die heeft doorgaans de vorm `https://<gebruikersnaam>.github.io/<repositorynaam>/`.
 9. Open die HTTPS-URL in een eigen browsertab op de iPad. Cameratoestemming en apparaatbeleid moeten cameragebruik toestaan; fysieke iPad-scans zijn nog niet getest.
 
-Zet je Pages pas na de upload aan, of is een eerste publicatie mislukt? Zet Source alsnog op GitHub Actions. Open **Actions → Surplus Voorraad publiceren → Run workflow**, selecteer de standaardbranch en start opnieuw. Controleer bij fouten de mislukte stap; de workflow is lokaal voorbereid maar nog niet in jouw GitHub-account uitgevoerd.
+Zet je Pages pas na de upload aan, of is een eerste publicatie mislukt? Zet Source alsnog op GitHub Actions. Open **Actions → Surplus Voorraad publiceren → Run workflow**, selecteer de standaardbranch en start opnieuw. Controleer bij fouten de mislukte stap.
+
+Als tegelijk een automatische taak **pages build and deployment** vanuit een branch loopt, controleer dan opnieuw de Pages-bron. Die route kan de broncode publiceren en de gebouwde website overschrijven. Een groene workflow alleen bewijst daarom nog niet dat de juiste website online staat. Deze instelling vereist beheerrechten voor Pages; schrijfrechten om code te pushen zijn daarvoor niet voldoende.
 
 ## Belangrijk bij deze demo
 
 De repository en website zijn openbaar. Het pakket bevat uitsluitend de fictieve voorraaddemo; upload geen bewonerswerkmap of andere vertrouwelijke bijlagen. Hosting verandert de opslag niet: elke browser/apparaat heeft een eigen lokale voorraad. De website is geen gedeeld voorraadsysteem en bevat nu lokale pakbon-OCR, maar geen accounts of Microsoft-koppeling.
 
-De Vite-configuratie gebruikt `base: './'`. De gebouwde HTML verwijst relatief naar CSS, JavaScript en het favicon en kan daardoor ook onder de repository-map laden. Er is geen extra router of GitHub-redirect nodig voor de huidige schermen. Als later een router met echte URL-paden wordt toegevoegd, moet de publicatie opnieuw worden beoordeeld.
+De Vite-configuratie gebruikt `base: '/surplus/'`, passend bij de huidige repository `Kadayif75/surplus`. De gebouwde HTML verwijst naar CSS, JavaScript en het favicon onder `/surplus/`. Gebruik je een andere repositorynaam, pas dan dit pad in `vite.config.ts` aan. Er is geen extra router of GitHub-redirect nodig voor de huidige schermen. Als later een router met echte URL-paden wordt toegevoegd, moet de publicatie opnieuw worden beoordeeld.
 
 ## Bij volgende wijzigingen
 
@@ -38,6 +40,8 @@ npm test
 npm run build
 ```
 
-De app en het relatieve buildpad zijn lokaal gecontroleerd. De GitHub-workflow is nog niet daadwerkelijk op GitHub uitgevoerd en er is nog geen gepubliceerde URL aangemaakt. Zie ook `TESTRESULTATEN.md` voor de inhoudelijke tests en beperkingen.
+Op 13 oktober 2026 is [GitHub-run 38451070287](https://github.com/Kadayif75/surplus/actions/runs/38451070287) geslaagd, inclusief tests, typecontrole, build en publicatie. Bij deze controle stond de Pages-bron nog op branchpublicatie en werd op de live URL bron-HTML gevonden. Kies GitHub Actions als bron en voer de workflow daarna opnieuw uit. De site hoort te laden vanaf https://kadayif75.github.io/surplus/; de gepubliceerde HTML moet naar `/surplus/assets/index-...js` verwijzen en niet naar `/src/main.tsx`.
+
+De eerdere run stopte met `Segmentation fault (core dumped)` (exitcode 139) tijdens native PDF/canvas-tests. `npm test` gebruikt daarom nu `--pool forks`, zodat deze tests in afzonderlijke processen draaien. Alle tests blijven actief. Lokaal slagen 173 tests en de productiebuild; drie optionele tests met private bijlagen worden overgeslagen. Zie ook `BESTELLEN-TESTRESULTATEN.md` voor de verificatie en beperkingen.
 
 Bronnen geraadpleegd op 30 september 2026: [GitHub Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages), [publicatiebron instellen](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site), [Vite-publicatie op GitHub Pages](https://vite.dev/guide/static-deploy.html#github-pages).
