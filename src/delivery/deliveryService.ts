@@ -4,6 +4,7 @@ import { calculateStock, InventoryError } from '../domain/stockService';
 import { positiveInteger, validateDeliveryLine } from './deliveryValidation';
 import type { DeliveryDraft, DeliveryNote } from './types';
 import { orderDeliveryProblems } from '../orders/orderDelivery';
+import { alertTables, captureStockAlerts } from '../alerts/alertService';
 
 export class DuplicateDeliveryError extends InventoryError {
   readonly previous: DeliveryNote;
@@ -37,7 +38,7 @@ export async function confirmDelivery(db: InventoryDatabase, draft: DeliveryDraf
     normalizeIdentity(draft.supplier), draft.deliveryDate,
     draft.lines.map(l => [l.articleNumber.trim(), l.productId, l.quantityText, l.unit, l.packsPerBoxText, l.piecesPerPackText, l.excluded]).sort((a,b) => JSON.stringify(a).localeCompare(JSON.stringify(b))),
   ])));
-  return db.transaction('rw', [db.deliveries, db.products, db.locations, db.stocks, db.movements, db.articleAliases, db.mappings, db.orders], async () => {
+  return db.transaction('rw', [db.deliveries, db.products, db.locations, db.stocks, db.movements, db.articleAliases, db.mappings, db.orders, ...alertTables(db)], async () => {
     const existing = await db.deliveries.where('operationId').equals(draft.operationId).first();
     if (existing) {
       if (existing.commandSignature !== signature) throw new InventoryError('Deze ontvangst is al bevestigd met andere gegevens.');
@@ -108,6 +109,7 @@ export async function confirmDelivery(db: InventoryDatabase, draft: DeliveryDraf
       lines, excludedLines: draft.lines.filter(l => l.excluded).map(l => ({ rawText: l.rawText, reason: l.exclusionReason, sourcePage: l.sourcePage })),
       movementIds, commandSignature: signature, orderId: draft.orderId };
     await db.deliveries.add(note);
+    await captureStockAlerts(db);
     return note;
   });
 }

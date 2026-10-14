@@ -2,6 +2,7 @@ import type { BarcodeMapping, BookingCommand, InventoryRepository, InventorySnap
 import { calculateStock, InventoryError, sameOperation, validateCommand } from '../domain/stockService';
 import { InventoryDatabase } from './db';
 import { initializeDemo, writeSeed } from './seed';
+import { alertTables, captureStockAlerts } from '../alerts/alertService';
 
 export class LocalInventoryRepository implements InventoryRepository {
   readonly db: InventoryDatabase;
@@ -20,7 +21,7 @@ export class LocalInventoryRepository implements InventoryRepository {
   }
   async bookMovement(command: BookingCommand): Promise<Movement> {
     validateCommand(command);
-    return this.db.transaction('rw', [this.db.movements, this.db.stocks, this.db.products, this.db.locations, this.db.mappings], async () => {
+    return this.db.transaction('rw', [this.db.movements, this.db.stocks, this.db.products, this.db.locations, this.db.mappings, ...alertTables(this.db)], async () => {
       const existing = await this.db.movements.where('operationId').equals(command.operationId).first();
       if (existing) {
         if (!sameOperation(existing, command)) throw new InventoryError('Deze boeking is al gebruikt met andere gegevens. Begin een nieuwe boeking.');
@@ -45,6 +46,7 @@ export class LocalInventoryRepository implements InventoryRepository {
       };
       await this.db.stocks.put({ ...stock, quantityPacks: stockAfter });
       await this.db.movements.add(movement);
+      await captureStockAlerts(this.db);
       return movement;
     });
   }
@@ -77,8 +79,8 @@ export class LocalInventoryRepository implements InventoryRepository {
     });
   }
   resetDemo() {
-    return this.db.transaction('rw', [this.db.products, this.db.locations, this.db.mappings, this.db.stocks, this.db.movements, this.db.meta, this.db.deliveries, this.db.articleAliases, this.db.productLocationRules, this.db.orders], async () => {
-      for (const table of [this.db.products, this.db.locations, this.db.mappings, this.db.stocks, this.db.movements, this.db.meta, this.db.deliveries, this.db.articleAliases, this.db.productLocationRules, this.db.orders]) await table.clear();
+    return this.db.transaction('rw', [this.db.products, this.db.locations, this.db.mappings, this.db.stocks, this.db.movements, this.db.meta, this.db.deliveries, this.db.articleAliases, this.db.productLocationRules, this.db.orders, ...alertTables(this.db)], async () => {
+      for (const table of [this.db.products, this.db.locations, this.db.mappings, this.db.stocks, this.db.movements, this.db.meta, this.db.deliveries, this.db.articleAliases, this.db.productLocationRules, this.db.orders, ...alertTables(this.db)]) await table.clear();
       await writeSeed(this.db);
     });
   }

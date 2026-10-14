@@ -25,4 +25,8 @@ dist-ssr
 
 .cache/
 public/pdfjs/
+.env
+.env.*
+!.env.mail.example
+server/.data/
 

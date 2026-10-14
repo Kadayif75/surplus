@@ -3,10 +3,11 @@ import { InventoryError } from '../domain/stockService';
 import type { DemandImport, OrderPlan } from './types';
 import { calculateOrder } from './orderCalculation';
 import { validateNewProduct } from '../delivery/deliveryService';
+import { alertTables, captureStockAlerts } from '../alerts/alertService';
 export async function saveOrder(db: InventoryDatabase, plan: OrderPlan, imports: Record<string, DemandImport>) {
   if (!plan.id || !plan.reference.trim() || !plan.supplier.trim() || plan.reference.length > 100 || plan.supplier.length > 160) throw new InventoryError('Vul leverancier en een uniek bestelnummer in.');
   if (!plan.reviewConfirmed) throw new InventoryError('Controleer de behoefte, actuele voorraad, artikelen en verdeling voordat je het bestelplan opslaat.');
-  return db.transaction('rw', [db.orders, db.products, db.locations, db.stocks, db.movements], async () => {
+  return db.transaction('rw', [db.orders, db.products, db.locations, db.stocks, db.movements, ...alertTables(db)], async () => {
     const previous = await db.orders.get(plan.id);
     const signature = JSON.stringify(plan);
     if (previous) { if (previous.commandSignature !== signature) throw new InventoryError('Dit bestelplan is al gebruikt met andere gegevens.'); return previous; }
@@ -33,7 +34,7 @@ export async function saveOrder(db: InventoryDatabase, plan: OrderPlan, imports:
       }
     }
     const saved: OrderPlan = { ...plan, reference: plan.reference.trim(), supplier: plan.supplier.trim(), status: 'Concept', commandSignature: signature };
-    await db.orders.add(saved); return saved;
+    await db.orders.add(saved); await captureStockAlerts(db); return saved;
   });
 }
 export async function markOrderSent(db: InventoryDatabase, id: string) {

@@ -10,9 +10,12 @@ import { DemoBarcodes } from './screens/DemoBarcodes';
 import { DeliveryPage } from './delivery/DeliveryPage';
 import { DeliveryHistory } from './delivery/DeliveryHistory';
 import { OrdersPage } from './orders/OrdersPage';
+import { AlertsPage } from './alerts/AlertsPage';
+import { useAlerts } from './alerts/useAlerts';
+import { minimumFor } from './alerts/types';
 import './styles.css';
 
-type Page = 'stock' | 'scan' | 'history' | 'settings' | 'barcodes' | 'delivery' | 'deliveries' | 'orders';
+type Page = 'stock' | 'scan' | 'history' | 'settings' | 'barcodes' | 'delivery' | 'deliveries' | 'orders' | 'alerts';
 export default function App() {
   const [page, setPage] = useState<Page>('stock');
   const [data, setData] = useState<InventorySnapshot>();
@@ -20,6 +23,8 @@ export default function App() {
   const [room, setRoom] = useState('H1');
   const [startProduct, setStartProduct] = useState<string>();
   const [action, setAction] = useState<'IN' | 'OUT'>('OUT');
+  const alerts = useAlerts();
+  const lowCount = data?.stocks.filter(stock => { const minimum = minimumFor(alerts.settings, stock.productId, stock.locationId); return minimum !== undefined && stock.quantityPacks <= minimum; }).length ?? 0;
   useEffect(() => {
     let subscription: Subscription | undefined;
     let disposed = false;
@@ -34,9 +39,12 @@ export default function App() {
   return <>
     <a className="skip" href="#main">Naar de inhoud</a>
     <header className="app-header"><div className="brand"><strong>Surplus <span>Voorraad</span></strong><span className="site-name">Ganshoek</span></div><span className="demo-status">Lokale demo: geen gedeelde voorraad</span></header>
-    <nav className="app-nav" aria-label="Hoofdnavigatie">{([['stock', 'Voorraad'], ['scan', 'Scannen & boeken'], ['orders', 'Excel samenvoegen'], ['delivery', 'Pakbon verwerken'], ['deliveries', 'Pakbonhistorie'], ['history', 'Mutaties'], ['settings', 'Demo-instellingen']] as const).map(([id, label]) => <button key={id} aria-current={page === id ? 'page' : undefined} onClick={() => navigate(id)}>{label}</button>)}</nav>
+    <nav className="app-nav" aria-label="Hoofdnavigatie">{([['stock', 'Voorraad'], ['scan', 'Scannen & boeken'], ['orders', 'Excel samenvoegen'], ['delivery', 'Pakbon verwerken'], ['alerts', 'Voorraadmeldingen'], ['deliveries', 'Pakbonhistorie'], ['history', 'Mutaties'], ['settings', 'Demo-instellingen']] as const).map(([id, label]) => <button key={id} aria-current={page === id ? 'page' : undefined} onClick={() => navigate(id)}>{label}</button>)}</nav>
     <main id="main">{error ? <div className="error" role="alert">{error}</div> : !data ? <p role="status">Demo-voorraad laden…</p> : <>
-      {page === 'stock' && <StockOverview data={data} room={room} setRoom={setRoom} book={book} scan={() => navigate('scan')} />}
+      {alerts.error && <div className="error" role="alert">{alerts.error}</div>}
+      {lowCount > 0 && page !== 'alerts' && <div className="notice">{lowCount} voorraadpositie{lowCount === 1 ? '' : 's'} op of onder het minimum. <button className="text-button" onClick={() => navigate('alerts')}>Bekijk voorraadmeldingen</button></div>}
+      {page === 'stock' && <StockOverview data={data} room={room} setRoom={setRoom} book={book} scan={() => navigate('scan')} alertSettings={alerts.settings} />}
+      {page === 'alerts' && (alerts.loaded ? <AlertsPage data={data} settings={alerts.settings} alerts={alerts.alerts} /> : <p role="status">Voorraadmeldingen laden…</p>)}
       {page === 'scan' && <ScanAndBook data={data} room={room} setRoom={setRoom} initialProduct={startProduct} initialAction={action} back={() => navigate('stock')} />}
       {page === 'history' && <MovementHistory data={data} />}
       {page === 'delivery' && <DeliveryPage data={data} />}
