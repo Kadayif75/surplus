@@ -29,4 +29,7 @@ public/pdfjs/
 .env.*
 !.env.mail.example
 server/.data/
+.wrangler/
+.dev.vars
+.dev.vars.*
 

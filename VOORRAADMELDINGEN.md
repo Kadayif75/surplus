@@ -1,5 +1,7 @@
 # Minimumvoorraad en e-mailmeldingen
 
+**Online uitbreiding:** de gratis Cloudflare-versie staat op `https://surplus-mail.mustafaatalay1234.workers.dev`. Vul die URL en de bestaande `APP_TOKEN` in op de GitHub Pages-site om online e-mails via Resend te versturen. Zie [CLOUDFLARE-MAIL.md](CLOUDFLARE-MAIL.md). De lokale Node-route hieronder blijft beschikbaar.
+
 14 oktober 2026. De lokale demo kan per product en voorraadruimte signaleren dat de voorraad op of onder het minimum staat. Een aparte lokale Node.js-server verstuurt de e-mail via Resend. Cloudflare is niet nodig.
 
 ## Gebruik

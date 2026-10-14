@@ -1,5 +1,7 @@
 # Surplus Voorraad · Ganshoek
 
+**Online mail, 14 oktober 2026:** de mailserver is ook beschikbaar als Cloudflare Worker met blijvende verzendbewijzen op het Free-plan. De GitHub Pages-app kan die rechtstreeks gebruiken met dezelfde toegangscode. Zie [CLOUDFLARE-MAIL.md](CLOUDFLARE-MAIL.md).
+
 **Uitbreiding 14 oktober 2026:** instelbare minimumvoorraad per ruimte en afwijkingen per product. Bij bereiken van de grens verschijnt een melding en kan via een lokale Node.js-server een e-mail door Resend worden verstuurd. Eén melding per lage-voorraadperiode, met veilige retries en zichtbare verzendstatus. Zie [VOORRAADMELDINGEN.md](VOORRAADMELDINGEN.md) voor de lokale inrichting en grenzen.
 
 **Vereenvoudigd 13 oktober 2026:** **Excel samenvoegen** leest drie bewonersoverzichten voor **Rood, Oranje en Groen** en maakt één document met alle bewonersregels in de oorspronkelijke TENA-opmaak. Tabbladen, logo's en macrobestanden blijven behouden. Het scherm heeft drie bestandsvelden, een klein besteloverzicht en één downloadknop. De locatieverdeling wordt automatisch voor latere pakbonontvangst bewaard. Zie [BESTELLEN.md](BESTELLEN.md) en [BESTELLEN-TESTRESULTATEN.md](BESTELLEN-TESTRESULTATEN.md).

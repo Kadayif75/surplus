@@ -1,0 +1,16 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "surplus-mail",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-10-14",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "preview_urls": false,
+  "vars": {
+    "ALERT_FROM": "noreply@barbr.pw",
+    "ALLOWED_ORIGINS": "https://kadayif75.github.io,http://127.0.0.1:5173,http://localhost:5173",
+    "MAIL_DAILY_LIMIT": "100"
+  },
+  "durable_objects": { "bindings": [{ "name": "MAIL_GATEWAY", "class_name": "MailGateway" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["MailGateway"] }]
+}

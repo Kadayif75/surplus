@@ -9,7 +9,10 @@
     "typecheck": "tsc -b --pretty false",
     "test": "vitest run --configLoader native --pool forks",
     "preview": "vite preview",
-    "mail:dev": "node --env-file-if-exists=.env.mail server/start.ts"
+    "mail:dev": "node --env-file-if-exists=.env.mail server/start.ts",
+    "mail:deploy": "wrangler deploy",
+    "mail:worker:dev": "wrangler dev --port 8788",
+    "mail:secrets": "node --env-file=.env.mail server/publishSecrets.ts"
   },
   "engines": {
     "node": ">=24.15.0"
@@ -37,7 +40,8 @@
     "jsdom": "30.1.1",
     "typescript": "~6.0.2",
     "vite": "^8.3.0",
-    "vitest": "5.0.3"
+    "vitest": "5.0.3",
+    "wrangler": "4.151.0"
   },
   "overrides": {
     "exceljs": {

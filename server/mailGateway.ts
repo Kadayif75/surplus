@@ -6,7 +6,7 @@ export interface MailConfig { apiKey: string; appToken: string; from: string; to
 interface Email { from: string; to: string[]; subject: string; text: string }
 export interface MailRecord { signature: string; email: Email; startedAt: number; emailId?: string }
 export interface MailLedger { records: Record<string, MailRecord>; day: string; attempts: number }
-export interface MailStore { read(): Promise<MailLedger>; write(value: MailLedger): Promise<void> }
+export interface MailStore { read(key?: string): Promise<MailLedger>; write(value: MailLedger): Promise<void> }
 const json = (status: number, body: object) => Response.json(body, { status });
 const emailAddress = /^[^\s<>@,]+@[^\s<>@,]+\.[^\s<>@,]+$/;
 export function validConfig(config: MailConfig) {
@@ -34,9 +34,10 @@ export function buildEmail(config: MailConfig, payload: AlertPayload): Email {
 export function createMailGateway(config: MailConfig, store: MailStore, fetcher: typeof fetch = fetch, now: () => number = Date.now) {
   let queue: Promise<unknown> = Promise.resolve();
   async function send(payload: AlertPayload) {
-    const state = await store.read();
+    const key = `alert:${payload.id}`;
+    const state = await store.read(key);
     const signature = createHash('sha256').update(JSON.stringify(payload)).digest('hex');
-    const key = `alert:${payload.id}`; let record = state.records[key];
+    let record = state.records[key];
     if (record && record.signature !== signature) return json(409, { code: 'conflict' });
     if (record?.emailId) return json(200, { id: record.emailId });
     // Resend retains idempotency keys for 24h. Never blindly retry an ambiguous send beyond that window.
@@ -50,7 +51,7 @@ export function createMailGateway(config: MailConfig, store: MailStore, fetcher:
     try {
       const response = await fetcher('https://api.resend.com/emails', { method: 'POST', headers: {
         Authorization: `Bearer ${config.apiKey}`, 'Content-Type': 'application/json', 'Idempotency-Key': `surplus-stock/${payload.id}`,
-      }, body: JSON.stringify(record.email), signal: AbortSignal.timeout(10000), redirect: 'error' });
+      }, body: JSON.stringify(record.email), signal: AbortSignal.timeout(10000), redirect: 'manual' });
       if (!response.ok) return json(response.status === 429 ? 429 : 502, { code: 'provider' });
       const data = await response.json() as { id?: unknown };
       if (typeof data.id !== 'string' || !data.id) return json(502, { code: 'provider' });
