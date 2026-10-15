@@ -10,16 +10,16 @@ beforeEach(async () => { repo = new LocalInventoryRepository(new InventoryDataba
 afterEach(async () => { await repo.db.delete(); });
 
 describe('Fictieve beginvoorraad en demonstratiescript', () => {
-  it('S01: exact acht producten, drie ruimtes, 24 standen, 21 positieve openingsmutaties, negen democodes', async () => {
+  it('S01: negen producten, drie ruimtes, 27 standen, 21 openingsmutaties en tien barcodekoppelingen', async () => {
     const snapshot = await repo.snapshot();
-    expect(snapshot.products).toHaveLength(8); expect(snapshot.locations.map(l => l.id)).toEqual(['H1', 'H2', 'H3']);
-    expect(snapshot.stocks).toHaveLength(24); expect(snapshot.movements).toHaveLength(21); expect(snapshot.mappings).toHaveLength(9);
+    expect(snapshot.products).toHaveLength(9); expect(snapshot.locations.map(l => l.id)).toEqual(['H1', 'H2', 'H3']);
+    expect(snapshot.stocks).toHaveLength(27); expect(snapshot.movements).toHaveLength(21); expect(snapshot.mappings).toHaveLength(10);
     const expected = { '760364': [10,6,4], '760384': [2,0,5], '750651': [3,4,1], '750776': [0,2,6], '791528': [8,5,3], '791628': [6,2,0], '761425': [4,4,4], '761531': [1,3,2] };
     for (const [article, amounts] of Object.entries(expected)) {
       expect(['H1','H2','H3'].map(id => snapshot.stocks.find(s => s.productId === `tena-${article}` && s.locationId === id)?.quantityPacks)).toEqual(amounts);
     }
     expect(snapshot.movements.every(m => m.type === 'OPENING' && m.quantityPacks > 0 && m.stockBefore === 0 && m.stockAfter === m.quantityPacks)).toBe(true);
-    expect(snapshot.mappings.every(m => m.isDemo && m.verified && m.quantityInStockUnits === 1)).toBe(true);
+    expect(snapshot.mappings.every(m => m.verified && m.quantityInStockUnits === 1)).toBe(true);
   });
   it('S02: afboeken H1 geeft 8/6/4 en totaal 18, toevoegen H2 geeft 8/9/4 en totaal 21', async () => {
     await repo.bookMovement(command());
@@ -74,7 +74,7 @@ describe('Invoercontroles zonder ongewenste mutaties', () => {
     await expect(repo.bookMovement(command({ scannedBarcode: undefined }))).rejects.toThrow('Voer een barcode');
   });
   it('V07: nulpositie blijft bestaan na volledig afboeken', async () => {
-    await repo.bookMovement(command({ quantityPacks: 10 })); expect((await repo.db.stocks.get(['tena-760364','H1']))?.quantityPacks).toBe(0); expect(await repo.listProducts()).toHaveLength(8); expect(await repo.listMovements()).toHaveLength(22);
+    await repo.bookMovement(command({ quantityPacks: 10 })); expect((await repo.db.stocks.get(['tena-760364','H1']))?.quantityPacks).toBe(0); expect(await repo.listProducts()).toHaveLength(9); expect(await repo.listMovements()).toHaveLength(22);
   });
 });
 
@@ -94,6 +94,6 @@ describe('Gecontroleerde barcodekoppelingen en reset', () => {
   });
   it('B05: reset herstelt standen, historie, demokoppelingen en ruimtenamen', async () => {
     await repo.bookMovement(command()); await repo.addMapping(realMapping()); await repo.renameLocations({ H1: 'Kast A', H2: 'Kast B', H3: 'Kast C' });
-    await repo.resetDemo(); await repo.initialize(); expect((await repo.db.stocks.get(['tena-760364','H1']))?.quantityPacks).toBe(10); expect(await repo.listMovements()).toHaveLength(21); expect(await repo.resolveBarcode('0001234567895')).toBeUndefined(); expect(await repo.db.mappings.count()).toBe(9); expect((await repo.listLocations())[0].name).toBe('Rood');
+    await repo.resetDemo(); await repo.initialize(); expect((await repo.db.stocks.get(['tena-760364','H1']))?.quantityPacks).toBe(10); expect(await repo.listMovements()).toHaveLength(21); expect(await repo.resolveBarcode('0001234567895')).toBeUndefined(); expect(await repo.db.mappings.count()).toBe(10); expect((await repo.listLocations())[0].name).toBe('Rood');
   });
 });

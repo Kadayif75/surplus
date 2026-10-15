@@ -24,6 +24,32 @@ export const seedMappings: BarcodeMapping[] = seedProducts.map((product, i) => (
 }));
 seedMappings.push({ ...seedMappings[0], id: 'demo-ean', rawValue: '2000000000015', symbology: 'EAN_13' });
 
+const physicalDemoProduct: Product = {
+  id: 'tena-794623', tenaArticleNumber: '794623', name: 'TENA Pants Maxi ProSkin Large', variant: 'Large',
+  stockUnit: 'verpakking', packsPerBox: 4, piecesPerPack: 10, assortmentVerified: true,
+  sourceReference: 'Artikel en barcode bevestigd door gebruiker met productfoto; doosinhoud: https://medical.essity.nl/fileadmin/user_upload/Digitaal_assortimentsoverzicht_Essity.pdf (p. 106).',
+};
+
+async function addPhysicalDemoProduct(db: InventoryDatabase) {
+  if (await db.meta.get('physicalDemoProduct794623')) return;
+  // Match by article number: the employee may already have added it through a receipt.
+  const existingProduct = await db.products.where('tenaArticleNumber').equals(physicalDemoProduct.tenaArticleNumber).first();
+  const product = existingProduct ?? physicalDemoProduct;
+  if (!existingProduct) await db.products.add(product);
+  const rawValue = '7322541358826';
+  // Preserve any existing employee-confirmed barcode mapping.
+  if (!(await db.mappings.where('rawValue').equals(rawValue).first())) {
+    await db.mappings.add({ id: `physical-${rawValue}`, rawValue, symbology: 'EAN_13', productId: product.id,
+      packagingLevel: 'verpakking', quantityInStockUnits: 1, isDemo: false, verified: true });
+  }
+  for (const location of await db.locations.toArray()) {
+    if (!(await db.stocks.get([product.id, location.id]))) {
+      await db.stocks.add({ productId: product.id, locationId: location.id, quantityPacks: 0 });
+    }
+  }
+  await db.meta.put({ key: 'physicalDemoProduct794623', value: 1 });
+}
+
 export async function writeSeed(db: InventoryDatabase) {
   const stocks: StockPosition[] = rows.flatMap(([article, , , , , quantities]) => quantities.map((quantityPacks, i) => ({
     productId: `tena-${article}`, locationId: `H${i + 1}`, quantityPacks,
@@ -40,10 +66,12 @@ export async function writeSeed(db: InventoryDatabase) {
   await db.stocks.bulkPut(stocks);
   await db.movements.bulkPut(movements);
   await db.meta.put({ key: 'seedVersion', value: 1 });
+  await addPhysicalDemoProduct(db);
 }
 export async function initializeDemo(db: InventoryDatabase) {
   await db.transaction('rw', [db.products, db.locations, db.mappings, db.stocks, db.movements, db.meta], async () => {
     if (!(await db.meta.get('seedVersion'))) await writeSeed(db);
+    await addPhysicalDemoProduct(db);
     if (!(await db.meta.get('colourLocationNames'))) {
       for (const location of await db.locations.toArray()) {
         const seed = seedLocations.find(candidate => candidate.id === location.id);

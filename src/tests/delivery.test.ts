@@ -95,7 +95,7 @@ describe('Volledige ontvangsttransactie', () => {
     await old.table('movements').put({id:'old',operationId:'old',productId:'tena-760364',locationId:'H1',quantityPacks:7,type:'IN',stockBefore:10,stockAfter:17,createdAt:'2026-09-30T12:00:00Z',actor:'Demogebruiker',inputSource:'productSearch',isDemoBarcode:false});
     await old.table('meta').put({key:'seedVersion',value:1});old.close();
     repo=new LocalInventoryRepository(new InventoryDatabase(name));await repo.initialize();
-    expect((await repo.db.stocks.get(['tena-760364','H1']))?.quantityPacks).toBe(17);expect((await repo.db.movements.get('old'))?.stockAfter).toBe(17);expect(await repo.db.products.count()).toBe(8);expect(await repo.db.deliveries.count()).toBe(0);
+    expect((await repo.db.stocks.get(['tena-760364','H1']))?.quantityPacks).toBe(17);expect((await repo.db.movements.get('old'))?.stockAfter).toBe(17);expect(await repo.db.products.count()).toBe(9);expect(await repo.db.deliveries.count()).toBe(0);
   });
   it('gewijzigde opdracht met zelfde operationId wordt geweigerd', async () => { await confirmDelivery(repo.db,draft); await expect(confirmDelivery(repo.db,{...draft,lines:[line({quantityText:'1'})]})).rejects.toThrow('andere gegevens'); });
   it('opslagfout bij tweede mutatie draait hele ontvangst terug en retry slaagt', async () => {
